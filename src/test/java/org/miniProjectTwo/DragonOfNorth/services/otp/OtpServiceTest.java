@@ -1,10 +1,11 @@
 package org.miniProjectTwo.DragonOfNorth.services.otp;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
+import org.miniProjectTwo.DragonOfNorth.components.AuditEventLogger;
 import org.miniProjectTwo.DragonOfNorth.enums.ErrorCode;
 import org.miniProjectTwo.DragonOfNorth.enums.IdentifierType;
 import org.miniProjectTwo.DragonOfNorth.enums.OtpPurpose;
@@ -13,7 +14,6 @@ import org.miniProjectTwo.DragonOfNorth.exception.BusinessException;
 import org.miniProjectTwo.DragonOfNorth.model.OtpToken;
 import org.miniProjectTwo.DragonOfNorth.repositories.OtpTokenRepository;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.OtpSender;
-import org.miniProjectTwo.DragonOfNorth.services.AuditEventLogger;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;

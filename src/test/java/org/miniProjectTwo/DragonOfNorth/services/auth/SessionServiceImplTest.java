@@ -1,9 +1,9 @@
 package org.miniProjectTwo.DragonOfNorth.services.auth;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.miniProjectTwo.DragonOfNorth.components.TokenHasher;
 import org.miniProjectTwo.DragonOfNorth.enums.ErrorCode;
 import org.miniProjectTwo.DragonOfNorth.exception.BusinessException;
@@ -12,7 +12,6 @@ import org.miniProjectTwo.DragonOfNorth.model.Session;
 import org.miniProjectTwo.DragonOfNorth.repositories.AppUserRepository;
 import org.miniProjectTwo.DragonOfNorth.repositories.SessionRepository;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.JwtServices;
-import org.miniProjectTwo.DragonOfNorth.services.AuditEventLogger;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -46,8 +45,6 @@ class SessionServiceImplTest {
     private MeterRegistry meterRegistry;
     @Mock
     private Counter counter;
-    @Mock
-    private AuditEventLogger auditEventLogger;
 
     @Test
     void createSession_shouldReplaceExistingDeviceSession() {

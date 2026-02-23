@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.miniProjectTwo.DragonOfNorth.components.AuditEventLogger;
 import org.miniProjectTwo.DragonOfNorth.config.security.AppUserDetails;
 import org.miniProjectTwo.DragonOfNorth.config.security.JwtServicesImpl;
 import org.miniProjectTwo.DragonOfNorth.dto.auth.request.PasswordResetConfirmRequest;
@@ -16,7 +17,6 @@ import org.miniProjectTwo.DragonOfNorth.model.Role;
 import org.miniProjectTwo.DragonOfNorth.repositories.AppUserRepository;
 import org.miniProjectTwo.DragonOfNorth.repositories.RoleRepository;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.AuthCommonServices;
-import org.miniProjectTwo.DragonOfNorth.services.AuditEventLogger;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.JwtServices;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.OtpService;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.SessionService;
@@ -211,7 +211,7 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
         try {
             userId = jwtServices.extractUserId(refreshToken);
         } catch (BusinessException ignored) {
-            // keep nullable userId in audit event when token extraction fails
+            // keep nullable userId in the audit event when token extraction fails
         }
 
         try {

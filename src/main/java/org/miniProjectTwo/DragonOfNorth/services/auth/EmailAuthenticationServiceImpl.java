@@ -2,6 +2,7 @@ package org.miniProjectTwo.DragonOfNorth.services.auth;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
+import org.miniProjectTwo.DragonOfNorth.components.AuditEventLogger;
 import org.miniProjectTwo.DragonOfNorth.dto.auth.request.AppUserSignUpRequest;
 import org.miniProjectTwo.DragonOfNorth.dto.auth.response.AppUserStatusFinderResponse;
 import org.miniProjectTwo.DragonOfNorth.enums.IdentifierType;
@@ -10,7 +11,6 @@ import org.miniProjectTwo.DragonOfNorth.model.AppUser;
 import org.miniProjectTwo.DragonOfNorth.repositories.AppUserRepository;
 import org.miniProjectTwo.DragonOfNorth.resolver.AuthenticationServiceResolver;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.AuthCommonServices;
-import org.miniProjectTwo.DragonOfNorth.services.AuditEventLogger;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.AuthenticationService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
