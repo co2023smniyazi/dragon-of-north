@@ -51,7 +51,6 @@ class SessionServiceImplTest {
 
     @Test
     void createSession_shouldReplaceExistingDeviceSession() {
-        when(meterRegistry.counter(any())).thenReturn(counter);
         ReflectionTestUtils.setField(sessionService, "refreshTokenDurationMs", 60000L);
 
         AppUser user = new AppUser();
@@ -98,7 +97,6 @@ class SessionServiceImplTest {
 
     @Test
     void validateAndRotateSession_shouldThrow_whenSessionRevoked() {
-        when(meterRegistry.counter(any())).thenReturn(counter);
         UUID userId = UUID.randomUUID();
         AppUser user = new AppUser();
         user.setId(userId);
@@ -120,7 +118,6 @@ class SessionServiceImplTest {
 
     @Test
     void validateAndRotateSession_shouldRotateHash_whenValid() {
-        when(meterRegistry.counter(any())).thenReturn(counter);
         UUID userId = UUID.randomUUID();
         AppUser user = new AppUser();
         user.setId(userId);
