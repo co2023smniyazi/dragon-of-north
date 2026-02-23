@@ -24,6 +24,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 import java.util.UUID;
@@ -204,6 +205,7 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
     }
 
     @Override
+    @Transactional
     public void resetPassword(PasswordResetConfirmRequest request) {
         OtpVerificationStatus status = request.identifierType() == IdentifierType.EMAIL
                 ? otpService.verifyEmailOtp(request.identifier(), request.otp(), OtpPurpose.PASSWORD_RESET)
