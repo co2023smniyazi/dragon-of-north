@@ -142,6 +142,8 @@ class EmailAuthenticationServiceImplTest {
 
 
         verify(appUserRepository).findAppUserStatusByEmail(request.identifier());
+        verify(auditEventLogger).log("auth.signup", null, null, null, "success", "identifier_type=EMAIL", null);
+        verify(auditEventLogger, never()).log(eq("auth.signup"), isNull(), isNull(), isNull(), eq("failure"), anyString(), isNull());
     }
 
     @Test
@@ -170,6 +172,7 @@ class EmailAuthenticationServiceImplTest {
         verify(authCommonServices).updateUserStatus(CREATED, appUser);
         verify(authCommonServices).assignDefaultRole(appUser);
         verify(appUserRepository).save(appUser);
+        verify(auditEventLogger).log("auth.signup.complete", appUser.getId(), null, null, "success", "identifier_type=EMAIL", null);
 
     }
 
@@ -187,6 +190,7 @@ class EmailAuthenticationServiceImplTest {
         //verify
         verify(appUserRepository, never()).save(any());
         verify(appUserRepository, never()).findAppUserStatusByEmail(any());
+        verify(auditEventLogger).log(eq("auth.signup.complete"), isNull(), isNull(), isNull(), eq("failure"), anyString(), isNull());
     }
 
 }

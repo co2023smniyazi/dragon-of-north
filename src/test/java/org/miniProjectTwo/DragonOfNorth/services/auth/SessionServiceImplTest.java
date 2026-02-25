@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -93,6 +93,8 @@ class SessionServiceImplTest {
                 () -> sessionService.revokeAllOtherSessions(UUID.randomUUID(), " "));
 
         assertEquals(ErrorCode.INVALID_TOKEN, ex.getErrorCode());
+        verify(auditEventLogger).log(eq("session.revoke.others"), any(UUID.class), eq(" "), isNull(), eq("failure"), eq("device ID missing"), isNull());
+
     }
 
     @Test
@@ -137,5 +139,56 @@ class SessionServiceImplTest {
         assertEquals(userId, actual);
         assertEquals("newHash", session.getRefreshTokenHash());
         assertNotNull(session.getLastUsedAt());
+    }
+
+    @Test
+    void revokeSession_shouldLogSuccess_whenSessionExists() {
+        UUID userId = UUID.randomUUID();
+        AppUser user = new AppUser();
+        user.setId(userId);
+        Session session = new Session();
+
+        when(jwtServices.extractUserId("refresh")).thenReturn(userId);
+        when(appUserRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tokenHasher.hashToken("refresh")).thenReturn("hash");
+        when(sessionRepository.findByRefreshTokenHashAndDeviceIdAndAppUser("hash", "device1", user)).thenReturn(Optional.of(session));
+        when(meterRegistry.counter(any())).thenReturn(counter);
+
+        sessionService.revokeSession("refresh", "device1");
+
+        // Remove this line - save() is not explicitly called
+        // verify(sessionRepository).save(session);
+
+        assertTrue(session.isRevoked());
+        verify(auditEventLogger).log("session.revoke.current", userId, "device1", null, "success", null, null);
+    }
+
+    @Test
+    void revokeSession_shouldLogFailure_whenSessionNotFound() {
+        UUID userId = UUID.randomUUID();
+        AppUser user = new AppUser();
+        user.setId(userId);
+
+        when(jwtServices.extractUserId("refresh")).thenReturn(userId);
+        when(appUserRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(tokenHasher.hashToken("refresh")).thenReturn("hash");
+        when(sessionRepository.findByRefreshTokenHashAndDeviceIdAndAppUser("hash", "device1", user)).thenReturn(Optional.empty());
+        when(meterRegistry.counter(any())).thenReturn(counter);
+
+        sessionService.revokeSession("refresh", "device1");
+
+        verify(auditEventLogger).log("session.revoke.current", userId, "device1", null, "failure", "session not found", null);
+    }
+
+    @Test
+    void revokeAllOtherSessions_shouldLogSuccess_whenSessionsExist() {
+        UUID userId = UUID.randomUUID();
+        when(meterRegistry.counter(any())).thenReturn(counter);
+        when(sessionRepository.revokeAllOtherSessions(userId, "currentDevice")).thenReturn(3);
+
+        int result = sessionService.revokeAllOtherSessions(userId, "currentDevice");
+
+        assertEquals(3, result);
+        verify(auditEventLogger).log("session.revoke.others", userId, "currentDevice", null, "success", "revoked_count=3", null);
     }
 }

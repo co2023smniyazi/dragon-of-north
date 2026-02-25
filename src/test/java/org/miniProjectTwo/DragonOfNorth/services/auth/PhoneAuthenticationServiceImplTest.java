@@ -151,6 +151,9 @@ class PhoneAuthenticationServiceImplTest {
 
         verify(appUserRepository).findAppUserStatusByPhone(request.identifier());
 
+        verify(auditEventLogger).log("auth.signup", null, null, null, "success", "identifier_type=PHONE", null);
+        verify(auditEventLogger, never()).log(eq("auth.signup"), isNull(), isNull(), isNull(), eq("failure"), anyString(), isNull());
+
     }
 
     @Test
@@ -176,6 +179,8 @@ class PhoneAuthenticationServiceImplTest {
         verify(authCommonServices).assignDefaultRole(appUser);
         verify(appUserRepository).save(appUser);
         verify(appUserRepository).findAppUserStatusByPhone(phoneNumber);
+
+        verify(auditEventLogger).log("auth.signup.complete", appUser.getId(), null, null, "success", "identifier_type=PHONE", null);
     }
 
     @Test
@@ -193,5 +198,7 @@ class PhoneAuthenticationServiceImplTest {
         //verify
         verify(appUserRepository, never()).save(any());
         verify(authCommonServices, never()).assignDefaultRole(any());
+
+        verify(auditEventLogger).log(eq("auth.signup.complete"), isNull(), isNull(), isNull(), eq("failure"), anyString(), isNull());
     }
 }
