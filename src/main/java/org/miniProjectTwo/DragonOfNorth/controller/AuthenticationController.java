@@ -41,9 +41,12 @@ public class AuthenticationController {
     private final AuthCommonServices authCommonServices;
 
     @PostMapping("/identifier/status")
-    @Operation(summary = "Check user status by identifier", description = "Returns current account lifecycle state for a given identifier.")
+    @Operation(summary = "Check user status by identifier",
+            description = "Returns current account lifecycle state for a given identifier.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Status found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = org.miniProjectTwo.DragonOfNorth.dto.api.ApiResponse.class))),
+            @ApiResponse(responseCode = "200", description = "Status found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = org.miniProjectTwo.DragonOfNorth.dto.api.ApiResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request payload")
     })
     public ResponseEntity<org.miniProjectTwo.DragonOfNorth.dto.api.ApiResponse<AppUserStatusFinderResponse>> findUserStatus(
@@ -52,7 +55,7 @@ public class AuthenticationController {
                     description = "Identifier and type to inspect",
                     content = @Content(examples = @ExampleObject(value = """
                             {
-                              "identifier": "intern.candidate@example.com",
+                              "identifier": "shaking.121@gmail.com",
                               "identifier_type": "EMAIL"
                             }
                             """)))
@@ -78,9 +81,9 @@ public class AuthenticationController {
                     description = "Registration payload",
                     content = @Content(examples = @ExampleObject(value = """
                             {
-                              "identifier": "intern.candidate@example.com",
+                              "identifier": "shaking.121@gmail.com",
                               "identifier_type": "EMAIL",
-                              "password": "Intern@123"
+                              "password": "Example@123"
                             }
                             """)))
             @RequestBody
@@ -105,7 +108,7 @@ public class AuthenticationController {
                     description = "Identifier to finalize",
                     content = @Content(examples = @ExampleObject(value = """
                             {
-                              "identifier": "intern.candidate@example.com",
+                              "identifier": "shaking.121@gmail.com",
                               "identifier_type": "EMAIL"
                             }
                             """)))
@@ -119,7 +122,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/identifier/login")
-    @Operation(summary = "Login and issue auth cookies", description = "Authenticates credentials and sets access_token + refresh_token HTTP-only cookies.")
+    @Operation(summary = "Login and issue auth cookies",
+            description = "Authenticates credentials and sets access_token + refresh_token HTTP-only cookies.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login successful"),
             @ApiResponse(responseCode = "401", description = "Invalid credentials"),
@@ -131,8 +135,8 @@ public class AuthenticationController {
                     description = "Login credentials",
                     content = @Content(examples = @ExampleObject(value = """
                             {
-                              "identifier": "intern.candidate@example.com",
-                              "password": "Intern@123",
+                              "identifier": "shaking.121@gmail.com",
+                              "password": "Example@123",
                               "device_id": "web-chrome-macos"
                             }
                             """)))
@@ -147,7 +151,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/jwt/refresh")
-    @Operation(summary = "Refresh access token", description = "Uses refresh_token cookie + device id to rotate tokens and return new auth cookies.")
+    @Operation(summary = "Refresh access token",
+            description = "Uses refresh_token cookie + device id to rotate tokens and return new auth cookies.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Token refreshed"),
             @ApiResponse(responseCode = "401", description = "Refresh token missing/invalid/expired")
@@ -172,7 +177,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/identifier/logout")
-    @Operation(summary = "Logout current device", description = "Revokes current device session and clears authentication cookies.")
+    @Operation(summary = "Logout current device",
+            description = "Revokes current device session and clears authentication cookies.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Logout successful"),
             @ApiResponse(responseCode = "401", description = "Not authenticated")

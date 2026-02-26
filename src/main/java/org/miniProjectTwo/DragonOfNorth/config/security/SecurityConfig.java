@@ -58,7 +58,8 @@ public class SecurityConfig {
             // actuator and health points
             "/actuator",
             "/actuator/health",
-            "/actuator/health/**"
+            "/actuator/health/**",
+            "/actuator/prometheus"
     };
 
     private final CorsConfigurationSource corsConfigurationSource;

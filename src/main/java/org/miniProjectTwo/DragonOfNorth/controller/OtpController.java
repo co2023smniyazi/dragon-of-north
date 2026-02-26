@@ -42,7 +42,7 @@ public class OtpController {
                     required = true,
                     content = @Content(examples = @ExampleObject(value = """
                             {
-                              "email": "intern.candidate@example.com",
+                              "email": "shaking.121@gmail.com",
                               "otp_purpose": "SIGNUP"
                             }
                             """)))
@@ -87,7 +87,7 @@ public class OtpController {
                     required = true,
                     content = @Content(examples = @ExampleObject(value = """
                             {
-                              "email": "intern.candidate@example.com",
+                              "email": "shaking.121@gmail.com",
                               "otp": "123456",
                               "otp_purpose": "SIGNUP"
                             }
