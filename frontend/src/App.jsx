@@ -9,7 +9,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ForgotPasswordRequestPage from './pages/ForgotPasswordRequestPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
-import {ToastProvider} from './context/ToastContext';
+import {ToastProvider} from './context/ToastContext.jsx';
 import ToastContainer from './components/Toast/ToastContainer';
 import NetworkStatus from './components/NetworkStatus/NetworkStatus';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';

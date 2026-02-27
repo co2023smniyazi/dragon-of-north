@@ -145,11 +145,14 @@ class ApiService {
 
                 // Handle specific auth errors with better messages
                 if (response.status === 401) {
+                    const defaultMessage = endpoint === API_CONFIG.ENDPOINTS.LOGIN
+                        ? 'Invalid email or password. Please check your credentials and try again.'
+                        : 'Authentication failed. Please log in again.';
                     return {
                         type: 'API_ERROR',
                         status: response.status,
-                        message: data?.message || 'Invalid credentials. Please check your email and password.',
                         ...normalizedError,
+                        message: data?.message || defaultMessage,
                         data,
                     };
                 }
@@ -158,8 +161,8 @@ class ApiService {
                     return {
                         type: 'API_ERROR',
                         status: response.status,
-                        message: data?.message || 'Access denied. You do not have permission to perform this action.',
                         ...normalizedError,
+                        message: data?.message || 'Too many failed attempts. Please wait a few minutes before trying again.',
                         data,
                     };
                 }
