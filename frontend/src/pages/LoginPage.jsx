@@ -5,23 +5,27 @@ import {apiService} from '../services/apiService';
 import {useAuth} from '../context/authUtils';
 import RateLimitInfo from '../components/RateLimitInfo';
 import {getDeviceId} from '../utils/device.js';
+import {useToast} from '../hooks/useToast';
+import ValidationError from '../components/Validation/ValidationError';
 
 const LoginPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const {login} = useAuth();
+    const {toast} = useToast();
     const {identifier: initialIdentifier, password: initialPassword} = location.state || {};
 
     const [identifier, setIdentifier] = useState(initialIdentifier || '');
     const [password, setPassword] = useState(initialPassword || '');
+    const [rememberMe, setRememberMe] = useState(localStorage.getItem('rememberMe') === 'true');
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
+    const [fieldErrors, setFieldErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        setError('');
         setLoading(true);
+        setFieldErrors({});
 
         const result = await apiService.post(API_CONFIG.ENDPOINTS.LOGIN, {
             identifier,
@@ -30,31 +34,36 @@ const LoginPage = () => {
         });
 
         if (apiService.isErrorResponse(result)) {
-            if (result.type === 'RATE_LIMIT_EXCEEDED') {
-                setError(`Too many login attempts. Please wait ${result.retryAfter ?? 60} seconds before trying again.`);
-            } else {
-                setError(result.message || 'Login failed. Please check your credentials.');
-            }
+            const errors = result?.fieldErrors?.reduce((acc, item) => {
+                acc[item.field] = [...(acc[item.field] || []), item.message];
+                return acc;
+            }, {}) || {};
+            setFieldErrors(errors);
+            toast.error(result.message || 'Login failed. Please check your credentials.');
             setLoading(false);
             return;
         }
 
         if (result?.api_response_status === 'success') {
+            if (rememberMe) {
+                localStorage.setItem('rememberMe', 'true');
+            } else {
+                localStorage.removeItem('rememberMe');
+            }
             login({identifier});
+            toast.success('Logged in successfully.');
             navigate('/dashboard');
         } else {
-            setError(result?.message || 'Login failed. Please check your credentials.');
+            toast.error(result?.message || 'Login failed. Please check your credentials.');
         }
 
         setLoading(false);
     };
 
     return (
-        <div
-            className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-950 to-slate-900">
+        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-950 to-slate-900">
             <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-950 p-8 shadow-2xl">
                 <h2 className="text-2xl font-bold text-white">Login</h2>
-
                 <p className="mt-1 mb-6 text-sm text-slate-400">Enter your credentials to access your account</p>
 
                 <form onSubmit={handleLogin} noValidate>
@@ -67,8 +76,11 @@ const LoginPage = () => {
                                 onChange={(e) => setIdentifier(e.target.value)}
                                 placeholder="Email or phone number"
                                 className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+                                aria-invalid={!!fieldErrors.identifier?.length}
+                                aria-describedby="identifier-errors"
                                 required
                             />
+                            <ValidationError id="identifier-errors" errors={fieldErrors.identifier || []}/>
                         </div>
 
                         <div>
@@ -80,47 +92,34 @@ const LoginPage = () => {
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Enter password"
                                     className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 pr-12 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+                                    aria-invalid={!!fieldErrors.password?.length}
+                                    aria-describedby="password-errors"
                                     required
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition"
-                                >
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition">
                                     {showPassword ? '🙈' : '👁️'}
                                 </button>
                             </div>
+                            <ValidationError id="password-errors" errors={fieldErrors.password || []}/>
                         </div>
 
-                        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+                        <label className="flex items-center gap-2 text-sm text-slate-300">
+                            <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)}/>
+                            Remember me on this device
+                        </label>
 
-                        <button
-                            type="submit"
-                            disabled={loading || !identifier || !password}
-                            className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
+                        <button type="submit" disabled={loading || !identifier || !password} className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50">
                             {loading ? 'Logging in...' : 'Login'}
                         </button>
                     </div>
-
                     <RateLimitInfo/>
                 </form>
 
                 <div className="mt-4 text-center">
-                    <button
-                        type="button"
-                        onClick={() => navigate('/forgot-password')}
-                        className="text-sm text-blue-400 hover:text-blue-300 transition"
-                    >
-                        Forgot password?
-                    </button>
+                    <button type="button" onClick={() => navigate('/forgot-password')} className="text-sm text-blue-400 hover:text-blue-300 transition">Forgot password?</button>
                 </div>
-
                 <div className="mt-4 text-center">
-                    <button onClick={() => navigate('/')}
-                            className="text-xs text-slate-500 hover:text-white transition">
-                        Back to Welcome
-                    </button>
+                    <button onClick={() => navigate('/')} className="text-xs text-slate-500 hover:text-white transition">Back to Welcome</button>
                 </div>
             </div>
         </div>

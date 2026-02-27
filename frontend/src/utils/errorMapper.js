@@ -1,0 +1,55 @@
+const ERROR_MESSAGES = {
+    TOK_001: 'Your session has expired. Please log in again.',
+    TOK_002: 'Invalid authentication token. Please log in again.',
+    AUTH_001: "The identifier doesn't match the expected format.",
+    AUTH_004: "Account status doesn't allow this action.",
+    USER_001: 'User account not found. Please check your credentials.',
+    USER_002: 'Your account is already verified.',
+    VAL_001: 'Please check your input and try again.',
+    OTP_001: 'Please wait {seconds} seconds before requesting another OTP.',
+    OTP_002: 'Too many OTP attempts. Please try again in {minutes} minutes.',
+    ROL_009: 'User role not found. Please contact support.',
+};
+
+const getTemplateValue = (data, keys, fallback) => {
+    for (const key of keys) {
+        const value = data?.[key];
+        if (value !== undefined && value !== null) {
+            return value;
+        }
+    }
+    return fallback;
+};
+
+export const mapErrorCodeToMessage = (errorCode, data = {}) => {
+    if (!errorCode || !ERROR_MESSAGES[errorCode]) {
+        return data?.message || 'Something went wrong. Please try again.';
+    }
+
+    const seconds = getTemplateValue(data, ['seconds', 'retry_after', 'retryAfter'], 60);
+    const minutes = getTemplateValue(data, ['minutes'], Math.ceil(seconds / 60));
+
+    return ERROR_MESSAGES[errorCode]
+        .replace('{seconds}', String(seconds))
+        .replace('{minutes}', String(minutes));
+};
+
+export const getFieldValidationErrors = (data = {}) => {
+    const validationList = data?.validation_error_list;
+    if (!Array.isArray(validationList)) {
+        return {};
+    }
+
+    return validationList.reduce((acc, item) => {
+        if (!item?.field || !item?.message) {
+            return acc;
+        }
+        if (!acc[item.field]) {
+            acc[item.field] = [];
+        }
+        acc[item.field].push(item.message);
+        return acc;
+    }, {});
+};
+
+export default ERROR_MESSAGES;

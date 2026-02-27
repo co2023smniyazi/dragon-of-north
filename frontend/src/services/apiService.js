@@ -1,15 +1,12 @@
 import {API_CONFIG} from '../config';
 import {getDeviceId} from '../utils/device';
+import {mapErrorCodeToMessage} from '../utils/errorMapper';
+import {exponentialBackoffDelay, shouldRetryRequest, wait} from '../utils/networkUtils';
 
 class ApiService {
     constructor() {
-        this.rateLimitInfo = {
-            remaining: null,
-            capacity: null,
-            retryAfter: null,
-        };
+        this.rateLimitInfo = {remaining: null, capacity: null, retryAfter: null};
         this.rateLimitListeners = [];
-
         this.isRefreshing = false;
         this.refreshPromise = null;
     }
@@ -58,17 +55,12 @@ class ApiService {
 
         this.isRefreshing = true;
 
-        this.refreshPromise = fetch(
-            `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REFRESH_TOKEN}`,
-            {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'include',
-                body: JSON.stringify({
-                    device_id: getDeviceId(),
-                }),
-            }
-        ).then(res => {
+        this.refreshPromise = fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REFRESH_TOKEN}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify({device_id: getDeviceId()}),
+        }).then(res => {
             if (!res.ok) {
                 throw new Error('Refresh failed');
             }
@@ -80,14 +72,28 @@ class ApiService {
         return this.refreshPromise;
     }
 
-    async request(endpoint, options = {}, retry = true) {
-        const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+    normalizeApiError(data, fallbackMessage) {
+        const errorCode = data?.error_code || data?.code;
+        return {
+            errorCode,
+            message: mapErrorCodeToMessage(errorCode, data),
+            fieldErrors: data?.validation_error_list || [],
+            raw: data,
+            fallbackMessage,
+        };
+    }
 
+    async request(endpoint, options = {}, retry = true, attempt = 0) {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            return {
+                type: 'NETWORK_ERROR',
+                message: 'You appear to be offline. Please check your connection and try again.',
+            };
+        }
+
+        const url = `${API_CONFIG.BASE_URL}${endpoint}`;
         const defaultOptions = {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers,
-            },
+            headers: {'Content-Type': 'application/json', ...options.headers},
             credentials: 'include',
             ...options,
         };
@@ -99,7 +105,7 @@ class ApiService {
             if (response.status === 401 && retry) {
                 try {
                     await this.refreshToken();
-                    return this.request(endpoint, options, false);
+                    return this.request(endpoint, options, false, attempt);
                 } catch (refreshError) {
                     localStorage.removeItem('isAuthenticated');
                     localStorage.removeItem('user');
@@ -111,67 +117,62 @@ class ApiService {
             const data = await this.parseBody(response);
 
             if (!response.ok) {
+                const normalizedError = this.normalizeApiError(data, 'An error occurred');
+
                 if (response.status === 429) {
                     return {
                         type: 'RATE_LIMIT_EXCEEDED',
-                        message: data?.message || 'Too many requests',
+                        status: response.status,
                         retryAfter: this.rateLimitInfo.retryAfter,
+                        ...normalizedError,
                         data,
                     };
                 }
 
+                if (attempt < 2 && shouldRetryRequest(response.status)) {
+                    await wait(exponentialBackoffDelay(attempt));
+                    return this.request(endpoint, options, retry, attempt + 1);
+                }
+
                 return {
                     type: 'API_ERROR',
-                    message: data?.message || 'An error occurred',
                     status: response.status,
+                    ...normalizedError,
                     data,
                 };
             }
 
             return data;
         } catch (error) {
+            if (attempt < 2) {
+                await wait(exponentialBackoffDelay(attempt));
+                return this.request(endpoint, options, retry, attempt + 1);
+            }
+
             return {
                 type: 'NETWORK_ERROR',
-                message: 'Failed to connect to server',
+                message: 'Failed to connect to server. Please try again.',
                 originalError: error,
             };
         }
     }
 
-    async get(endpoint, options = {}) {
-        return this.request(endpoint, {...options, method: 'GET'});
+    get(endpoint, options = {}) { return this.request(endpoint, {...options, method: 'GET'}); }
+
+    post(endpoint, body, options = {}) {
+        return this.request(endpoint, {...options, method: 'POST', body: JSON.stringify(body)});
     }
 
-    async post(endpoint, body, options = {}) {
-        return this.request(endpoint, {
-            ...options,
-            method: 'POST',
-            body: JSON.stringify(body),
-        });
+    put(endpoint, body, options = {}) {
+        return this.request(endpoint, {...options, method: 'PUT', body: JSON.stringify(body)});
     }
 
-    async put(endpoint, body, options = {}) {
-        return this.request(endpoint, {
-            ...options,
-            method: 'PUT',
-            body: JSON.stringify(body),
-        });
-    }
+    delete(endpoint, options = {}) { return this.request(endpoint, {...options, method: 'DELETE'}); }
 
-    async delete(endpoint, options = {}) {
-        return this.request(endpoint, {...options, method: 'DELETE'});
-    }
-
-    getRateLimitInfo() {
-        return {...this.rateLimitInfo};
-    }
+    getRateLimitInfo() { return {...this.rateLimitInfo}; }
 
     resetRateLimitInfo() {
-        this.rateLimitInfo = {
-            remaining: null,
-            capacity: null,
-            retryAfter: null,
-        };
+        this.rateLimitInfo = {remaining: null, capacity: null, retryAfter: null};
         this.notifyRateLimitUpdate();
     }
 }
