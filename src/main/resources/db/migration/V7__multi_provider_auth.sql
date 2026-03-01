@@ -25,8 +25,8 @@ FROM users;
 ALTER TABLE users DROP COLUMN provider_id;
 ALTER TABLE users DROP COLUMN provider;
 
+ALTER TABLE users
+    DROP CONSTRAINT IF EXISTS users_status_check;
 UPDATE users SET status = 'ACTIVE' WHERE status IN ('CREATED', 'VERIFIED');
 UPDATE users SET status = 'DELETED' WHERE status = 'NOT_EXIST';
-
-ALTER TABLE users DROP CONSTRAINT IF EXISTS users_status_check;
 ALTER TABLE users ADD CONSTRAINT users_status_check CHECK (status IN ('ACTIVE', 'LOCKED', 'DELETED'));
