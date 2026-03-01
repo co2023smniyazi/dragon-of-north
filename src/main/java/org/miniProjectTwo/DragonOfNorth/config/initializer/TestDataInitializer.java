@@ -3,7 +3,6 @@ package org.miniProjectTwo.DragonOfNorth.config.initializer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
-import org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus;
 import org.miniProjectTwo.DragonOfNorth.model.AppUser;
 import org.miniProjectTwo.DragonOfNorth.model.Role;
 import org.miniProjectTwo.DragonOfNorth.model.Session;
@@ -145,7 +144,6 @@ public class TestDataInitializer implements CommandLineRunner {
      * Creates a new user with email authentication only.
      *
      * @param email the email address for the user
-     * @param status the user status (CREATED or VERIFIED)
      * @param roles set of roles to assign to the user
      */
     private void createEmailUser(String email, boolean emailVerified, Set<Role> roles) {
@@ -170,7 +168,6 @@ public class TestDataInitializer implements CommandLineRunner {
      * Creates a new user with phone authentication only.
      *
      * @param phoneNumber the phone number for the user
-     * @param status the user status (CREATED or VERIFIED)
      * @param roles set of roles to assign to the user
      */
     private void createPhoneUser(String phoneNumber, boolean phoneVerified, Set<Role> roles) {

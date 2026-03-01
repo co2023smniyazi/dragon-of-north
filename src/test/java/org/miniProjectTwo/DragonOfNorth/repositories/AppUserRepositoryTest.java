@@ -48,7 +48,7 @@ class AppUserRepositoryTest {
         user.setId(UUID.randomUUID());
         user.setEmail("test@example.com");
         user.setPassword("hashedPassword");
-        user.setAppUserStatus(AppUserStatus.CREATED);
+        user.setAppUserStatus(AppUserStatus.ACTIVE);
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
         return user;
@@ -129,14 +129,14 @@ class AppUserRepositoryTest {
     void findAppUserStatusByEmail_shouldReturnStatus_whenEmailExists() {
         // arrange
         when(appUserRepository.findAppUserStatusByEmail("test@example.com"))
-                .thenReturn(Optional.of(AppUserStatus.VERIFIED));
+                .thenReturn(Optional.of(AppUserStatus.ACTIVE));
 
         // act
         Optional<AppUserStatus> result = appUserRepository.findAppUserStatusByEmail("test@example.com");
 
         // assert
         assertTrue(result.isPresent());
-        assertEquals(AppUserStatus.VERIFIED, result.get());
+        assertEquals(AppUserStatus.ACTIVE, result.get());
         verify(appUserRepository).findAppUserStatusByEmail("test@example.com");
     }
 
@@ -158,14 +158,14 @@ class AppUserRepositoryTest {
     void findAppUserStatusByPhone_shouldReturnStatus_whenPhoneExists() {
         // arrange
         when(appUserRepository.findAppUserStatusByPhone("+1234567890"))
-                .thenReturn(Optional.of(AppUserStatus.CREATED));
+                .thenReturn(Optional.of(AppUserStatus.LOCKED));
 
         // act
         Optional<AppUserStatus> result = appUserRepository.findAppUserStatusByPhone("+1234567890");
 
         // assert
         assertTrue(result.isPresent());
-        assertEquals(AppUserStatus.CREATED, result.get());
+        assertEquals(AppUserStatus.LOCKED, result.get());
         verify(appUserRepository).findAppUserStatusByPhone("+1234567890");
     }
 
@@ -217,18 +217,5 @@ class AppUserRepositoryTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(appUserRepository).findRolesById(userId);
-    }
-
-    @Test
-    void deleteByAppUserStatusAndCreatedAtBefore_shouldCallDeleteMethod() {
-        // arrange
-        AppUserStatus status = AppUserStatus.CREATED;
-        Instant cutoff = Instant.now().minusSeconds(1800);
-
-        // act
-        appUserRepository.deleteByAppUserStatusAndCreatedAtBefore(status, cutoff);
-
-        // assert
-        verify(appUserRepository).deleteByAppUserStatusAndCreatedAtBefore(status, cutoff);
     }
 }

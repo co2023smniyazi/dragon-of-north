@@ -17,8 +17,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus.CREATED;
-import static org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus.VERIFIED;
+import static org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus.ACTIVE;
+import static org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus.LOCKED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -88,37 +88,15 @@ class AuthCommonServiceImplTest {
     }
 
     @Test
-    void updateUserStatus_shouldUpdateToVerified_whenStatusIsCreated() {
+    void updateUserStatus_shouldSetProvidedStatus() {
         // arrange
         AppUser appUser = new AppUser();
-        appUser.setAppUserStatus(CREATED);
+        appUser.setAppUserStatus(ACTIVE);
 
         // act
-        authCommonService.updateUserStatus(CREATED, appUser);
+        authCommonService.updateUserStatus(LOCKED, appUser);
 
         // assert
-        assertEquals(VERIFIED, appUser.getAppUserStatus());
-    }
-
-    @Test
-    void updateUserStatus_shouldThrowException_whenUserAlreadyVerified() {
-        // arrange
-        AppUser appUser = new AppUser();
-        appUser.setAppUserStatus(VERIFIED);
-
-        // act & assert
-        BusinessException exception = assertThrows(BusinessException.class, () -> authCommonService.updateUserStatus(CREATED, appUser));
-        assertEquals(ErrorCode.USER_ALREADY_VERIFIED, exception.getErrorCode());
-    }
-
-    @Test
-    void updateUserStatus_shouldThrowException_whenStatusIsNotCreated() {
-        // arrange
-        AppUser appUser = new AppUser();
-        appUser.setAppUserStatus(CREATED);
-
-        // act & assert
-        BusinessException exception = assertThrows(BusinessException.class, () -> authCommonService.updateUserStatus(VERIFIED, appUser));
-        assertEquals(ErrorCode.STATUS_MISMATCH, exception.getErrorCode());
+        assertEquals(LOCKED, appUser.getAppUserStatus());
     }
 }

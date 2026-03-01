@@ -22,6 +22,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.List;
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -58,7 +60,7 @@ class AuthenticationControllerTest {
     void findUserStatus_shouldReturnStatus_whenRequestIsValid() throws Exception {
         // arrange
         AppUserStatusFinderRequest request = new AppUserStatusFinderRequest("test@example.com", IdentifierType.EMAIL);
-        AppUserStatusFinderResponse response = new AppUserStatusFinderResponse(AppUserStatus.CREATED);
+        AppUserStatusFinderResponse response = new AppUserStatusFinderResponse(true, List.of(), false, AppUserStatus.ACTIVE);
 
         when(resolver.resolve(request.identifier(), request.identifierType())).thenReturn(authenticationService);
         when(authenticationService.getUserStatus(request.identifier())).thenReturn(response);
@@ -69,7 +71,7 @@ class AuthenticationControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.apiResponseStatus").value("success"))
-                .andExpect(jsonPath("$.data.appUserStatus").value("CREATED"));
+                .andExpect(jsonPath("$.data.appUserStatus").value("ACTIVE"));
 
         verify(resolver).resolve(request.identifier(), request.identifierType());
         verify(authenticationService).getUserStatus(request.identifier());
@@ -78,10 +80,10 @@ class AuthenticationControllerTest {
 
 
     @Test
-    void completeUserSignup_shouldReturnCreated_whenRequestIsValid() throws Exception {
+    void completeUserSignup_shouldReturnACTIVE_whenRequestIsValid() throws Exception {
         // arrange
         AppUserSignUpCompleteRequest request = new AppUserSignUpCompleteRequest("test@example.com", IdentifierType.EMAIL);
-        AppUserStatusFinderResponse response = new AppUserStatusFinderResponse(AppUserStatus.VERIFIED);
+        AppUserStatusFinderResponse response = new AppUserStatusFinderResponse(true, List.of(), true, AppUserStatus.ACTIVE);
 
         when(resolver.resolve(request.identifier(), request.identifierType())).thenReturn(authenticationService);
         when(authenticationService.completeSignUp(request.identifier())).thenReturn(response);
@@ -90,9 +92,9 @@ class AuthenticationControllerTest {
         mockMvc.perform(post("/api/v1/auth/identifier/sign-up/complete")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.apiResponseStatus").value("success"))
-                .andExpect(jsonPath("$.data.appUserStatus").value("VERIFIED"));
+                .andExpect(jsonPath("$.data.appUserStatus").value("ACTIVE"));
 
         verify(resolver).resolve(request.identifier(), request.identifierType());
         verify(authenticationService).completeSignUp(request.identifier());

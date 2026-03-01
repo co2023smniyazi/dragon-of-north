@@ -57,7 +57,7 @@ class AppUserTest {
         user.setEmail("test@example.com");
         user.setPhone("+1234567890");
         user.setPassword("hashedPassword");
-        user.setAppUserStatus(AppUserStatus.VERIFIED);
+        user.setAppUserStatus(AppUserStatus.ACTIVE);
         user.setEmailVerified(true);
         user.setPhoneNumberVerified(true);
         user.setFailedLoginAttempts(2);
@@ -71,7 +71,7 @@ class AppUserTest {
         assertEquals("test@example.com", user.getEmail());
         assertEquals("+1234567890", user.getPhone());
         assertEquals("hashedPassword", user.getPassword());
-        assertEquals(AppUserStatus.VERIFIED, user.getAppUserStatus());
+        assertEquals(AppUserStatus.ACTIVE, user.getAppUserStatus());
         assertTrue(user.isEmailVerified());
         assertTrue(user.isPhoneNumberVerified());
         assertEquals(2, user.getFailedLoginAttempts());
@@ -122,7 +122,7 @@ class AppUserTest {
         appUser.setEmail("new@example.com");
         appUser.setPhone("+9876543210");
         appUser.setPassword("newPassword");
-        appUser.setAppUserStatus(AppUserStatus.DELETED);
+        appUser.setAppUserStatus(AppUserStatus.LOCKED);
         appUser.setEmailVerified(true);
         appUser.setPhoneNumberVerified(true);
         appUser.setFailedLoginAttempts(5);
@@ -135,7 +135,7 @@ class AppUserTest {
         assertEquals("new@example.com", appUser.getEmail());
         assertEquals("+9876543210", appUser.getPhone());
         assertEquals("newPassword", appUser.getPassword());
-        assertEquals(AppUserStatus.DELETED, appUser.getAppUserStatus());
+        assertEquals(AppUserStatus.LOCKED, appUser.getAppUserStatus());
         assertTrue(appUser.isEmailVerified());
         assertTrue(appUser.isPhoneNumberVerified());
         assertEquals(5, appUser.getFailedLoginAttempts());
