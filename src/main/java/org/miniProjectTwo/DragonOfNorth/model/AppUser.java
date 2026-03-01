@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus;
-import org.miniProjectTwo.DragonOfNorth.enums.Provider;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -70,7 +69,7 @@ public class AppUser extends BaseEntity {
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private AppUserStatus appUserStatus;
+    private AppUserStatus appUserStatus = AppUserStatus.ACTIVE;
 
     /**
      * Indicates whether the user's email address has been verified.
@@ -110,14 +109,6 @@ public class AppUser extends BaseEntity {
      */
     private LocalDateTime lastLoginAt;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "provider", nullable = false)
-    private Provider provider = Provider.LOCAL;
-
-    @Column(name = "provider_id")
-    private String providerId;
-
-
     /**
      * Checks if a user has any assigned roles.
      *
@@ -140,5 +131,8 @@ public class AppUser extends BaseEntity {
 
     @OneToMany(mappedBy = "appUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Session> sessions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<UserAuthProvider> authProviders = new HashSet<>();
 
 }

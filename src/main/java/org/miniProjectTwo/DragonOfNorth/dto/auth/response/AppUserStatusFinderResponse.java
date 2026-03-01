@@ -3,12 +3,25 @@ package org.miniProjectTwo.DragonOfNorth.dto.auth.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus;
+import org.miniProjectTwo.DragonOfNorth.enums.Provider;
 
-/**
- * Response record for user status information and authentication availability.
- */
+import java.util.List;
+
 public record AppUserStatusFinderResponse(
+        @Schema(description = "Whether an account exists for the identifier.", example = "true")
+        boolean exists,
+
         @NotNull
-        @Schema(description = "Current lifecycle status of the user account.", allowableValues = {"NOT_EXIST", "CREATED", "VERIFIED", "DELETED"}, example = "CREATED")
-        AppUserStatus appUserStatus) {
+        @Schema(description = "Linked providers for the account.", example = "[\"LOCAL\",\"GOOGLE\"]")
+        List<Provider> providers,
+
+        @Schema(description = "Whether the account email is verified.", example = "true")
+        boolean emailVerified,
+
+        @Schema(description = "Current account status.", allowableValues = {"ACTIVE", "LOCKED", "DELETED"}, example = "ACTIVE")
+        AppUserStatus appUserStatus
+) {
+    public static AppUserStatusFinderResponse notFound() {
+        return new AppUserStatusFinderResponse(false, List.of(), false, null);
+    }
 }

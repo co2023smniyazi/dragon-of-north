@@ -2,7 +2,6 @@ package org.miniProjectTwo.DragonOfNorth.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus;
 import org.miniProjectTwo.DragonOfNorth.repositories.AppUserRepository;
 import org.miniProjectTwo.DragonOfNorth.repositories.OtpTokenRepository;
 import org.miniProjectTwo.DragonOfNorth.repositories.SessionRepository;
@@ -61,10 +60,7 @@ public class CleanupTask {
     @Scheduled(fixedDelay = 15 * 60 * 1000)
     @Transactional
     public void cleanupUnverifiedUsers() {
-        appUserRepository.deleteByAppUserStatusAndCreatedAtBefore(
-                AppUserStatus.CREATED,
-                Instant.now().minus(30, ChronoUnit.MINUTES)
-        );
+        appUserRepository.deleteByIsEmailVerifiedFalseAndCreatedAtBefore(Instant.now().minus(30, ChronoUnit.MINUTES));
         log.info("Cleaned up all unverified users");
     }
 

@@ -7,9 +7,11 @@ import org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus;
 import org.miniProjectTwo.DragonOfNorth.model.AppUser;
 import org.miniProjectTwo.DragonOfNorth.model.Role;
 import org.miniProjectTwo.DragonOfNorth.model.Session;
+import org.miniProjectTwo.DragonOfNorth.model.UserAuthProvider;
 import org.miniProjectTwo.DragonOfNorth.repositories.AppUserRepository;
 import org.miniProjectTwo.DragonOfNorth.repositories.RoleRepository;
 import org.miniProjectTwo.DragonOfNorth.repositories.SessionRepository;
+import org.miniProjectTwo.DragonOfNorth.repositories.UserAuthProviderRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
@@ -20,8 +22,8 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.Set;
 
-import static org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus.CREATED;
-import static org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus.VERIFIED;
+import static org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus.ACTIVE;
+import static org.miniProjectTwo.DragonOfNorth.enums.Provider.LOCAL;
 import static org.miniProjectTwo.DragonOfNorth.enums.RoleName.ADMIN;
 import static org.miniProjectTwo.DragonOfNorth.enums.RoleName.USER;
 
@@ -47,6 +49,7 @@ public class TestDataInitializer implements CommandLineRunner {
     private final AppUserRepository appUserRepository;
     private final RoleRepository roleRepository;
     private final SessionRepository sessionRepository;
+    private final UserAuthProviderRepository userAuthProviderRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -116,11 +119,11 @@ public class TestDataInitializer implements CommandLineRunner {
      */
     private void initializeEmailUsers(Role userRole, Role adminRole) {
         // Create 5 email-only users with different statuses and roles
-        createEmailUser("user1@example.com", CREATED, Set.of(userRole));
-        createEmailUser("user2@example.com", VERIFIED, Set.of(userRole));
-        createEmailUser("admin1@example.com", CREATED, Set.of(adminRole));
-        createEmailUser("admin2@example.com", VERIFIED, Set.of(adminRole));
-        createEmailUser("superadmin@example.com", VERIFIED, Set.of(userRole, adminRole));
+        createEmailUser("user1@example.com", false, Set.of(userRole));
+        createEmailUser("user2@example.com", true, Set.of(userRole));
+        createEmailUser("admin1@example.com", false, Set.of(adminRole));
+        createEmailUser("admin2@example.com", true, Set.of(adminRole));
+        createEmailUser("superadmin@example.com", true, Set.of(userRole, adminRole));
     }
 
     /**
@@ -131,11 +134,11 @@ public class TestDataInitializer implements CommandLineRunner {
      */
     private void initializePhoneUsers(Role userRole, Role adminRole) {
         // Create 5 phone-only users with different statuses and roles
-        createPhoneUser("9912345601", CREATED, Set.of(userRole));
-        createPhoneUser("9912345602", VERIFIED, Set.of(userRole));
-        createPhoneUser("9912345603", CREATED, Set.of(adminRole));
-        createPhoneUser("9912345604", VERIFIED, Set.of(adminRole));
-        createPhoneUser("9912345605", VERIFIED, Set.of(userRole, adminRole));
+        createPhoneUser("9912345601", false, Set.of(userRole));
+        createPhoneUser("9912345602", true, Set.of(userRole));
+        createPhoneUser("9912345603", false, Set.of(adminRole));
+        createPhoneUser("9912345604", true, Set.of(adminRole));
+        createPhoneUser("9912345605", true, Set.of(userRole, adminRole));
     }
 
     /**
@@ -145,7 +148,7 @@ public class TestDataInitializer implements CommandLineRunner {
      * @param status the user status (CREATED or VERIFIED)
      * @param roles set of roles to assign to the user
      */
-    private void createEmailUser(String email, AppUserStatus status, Set<Role> roles) {
+    private void createEmailUser(String email, boolean emailVerified, Set<Role> roles) {
         if (appUserRepository.findByEmail(email).isPresent()) {
             return;
         }
@@ -153,15 +156,14 @@ public class TestDataInitializer implements CommandLineRunner {
         AppUser user = new AppUser();
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode("password123"));
-        user.setAppUserStatus(status);
+        user.setAppUserStatus(ACTIVE);
         user.setRoles(roles);
-        
-        if (status == VERIFIED) {
-            user.setEmailVerified(true);
-        }
-        
-        appUserRepository.save(user);
-        log.info("Created {} email user: {}", status, email);
+
+        user.setEmailVerified(emailVerified);
+
+        AppUser savedUser = appUserRepository.save(user);
+        createLocalProvider(savedUser);
+        log.info("Created ACTIVE email user: {}", email);
     }
 
     /**
@@ -171,7 +173,7 @@ public class TestDataInitializer implements CommandLineRunner {
      * @param status the user status (CREATED or VERIFIED)
      * @param roles set of roles to assign to the user
      */
-    private void createPhoneUser(String phoneNumber, AppUserStatus status, Set<Role> roles) {
+    private void createPhoneUser(String phoneNumber, boolean phoneVerified, Set<Role> roles) {
         if (appUserRepository.findByPhone(phoneNumber).isPresent()) {
             return;
         }
@@ -179,15 +181,23 @@ public class TestDataInitializer implements CommandLineRunner {
         AppUser user = new AppUser();
         user.setPhone(phoneNumber);
         user.setPassword(passwordEncoder.encode("password123"));
-        user.setAppUserStatus(status);
+        user.setAppUserStatus(ACTIVE);
         user.setRoles(roles);
-        
-        if (status == VERIFIED) {
-            user.setPhoneNumberVerified(true);
+        user.setPhoneNumberVerified(phoneVerified);
+
+        AppUser savedUser = appUserRepository.save(user);
+        createLocalProvider(savedUser);
+        log.info("Created ACTIVE phone user: {}", phoneNumber);
+    }
+
+    private void createLocalProvider(AppUser appUser) {
+        if (userAuthProviderRepository.existsByUserIdAndProvider(appUser.getId(), LOCAL)) {
+            return;
         }
-        
-        appUserRepository.save(user);
-        log.info("Created {} phone user: {}", status, phoneNumber);
+        UserAuthProvider provider = new UserAuthProvider();
+        provider.setUser(appUser);
+        provider.setProvider(LOCAL);
+        userAuthProviderRepository.save(provider);
     }
 
 }

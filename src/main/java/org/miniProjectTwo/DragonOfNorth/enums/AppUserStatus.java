@@ -13,18 +13,7 @@ import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.AuthenticationService;
  * @see AppUserStatusFinderResponse for status reporting
  */
 public enum AppUserStatus {
-
-    NOT_EXIST,
-    /**
-     * The user is created but not verified yet
-     */
-    CREATED,
-    /**
-     * The user is verified for signup.
-     */
-    VERIFIED,
-    /**
-     * The user has been deleted from the system.
-     */
+    ACTIVE,
+    LOCKED,
     DELETED
 }

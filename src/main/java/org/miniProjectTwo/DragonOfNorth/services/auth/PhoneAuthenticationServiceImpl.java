@@ -8,17 +8,19 @@ import org.miniProjectTwo.DragonOfNorth.dto.auth.response.AppUserStatusFinderRes
 import org.miniProjectTwo.DragonOfNorth.enums.IdentifierType;
 import org.miniProjectTwo.DragonOfNorth.exception.BusinessException;
 import org.miniProjectTwo.DragonOfNorth.model.AppUser;
+import org.miniProjectTwo.DragonOfNorth.model.UserAuthProvider;
 import org.miniProjectTwo.DragonOfNorth.repositories.AppUserRepository;
+import org.miniProjectTwo.DragonOfNorth.repositories.UserAuthProviderRepository;
 import org.miniProjectTwo.DragonOfNorth.resolver.AuthenticationServiceResolver;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.AuthCommonServices;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.AuthenticationService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import static org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus.CREATED;
-import static org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus.NOT_EXIST;
+import static org.miniProjectTwo.DragonOfNorth.enums.AppUserStatus.ACTIVE;
 import static org.miniProjectTwo.DragonOfNorth.enums.ErrorCode.USER_NOT_FOUND;
 import static org.miniProjectTwo.DragonOfNorth.enums.IdentifierType.PHONE;
+import static org.miniProjectTwo.DragonOfNorth.enums.Provider.LOCAL;
 
 /**
  * Phone-based authentication service implementation.
@@ -37,6 +39,7 @@ public class PhoneAuthenticationServiceImpl implements AuthenticationService {
 
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserAuthProviderRepository userAuthProviderRepository;
     private final AuthCommonServices authCommonServices;
     private final MeterRegistry meterRegistry;
     private final AuditEventLogger auditEventLogger;
@@ -66,9 +69,14 @@ public class PhoneAuthenticationServiceImpl implements AuthenticationService {
     @Override
     public AppUserStatusFinderResponse getUserStatus(String identifier) {
         meterRegistry.counter("auth.status_lookup.requested").increment();
-        return appUserRepository
-                .findAppUserStatusByPhone(identifier).map(AppUserStatusFinderResponse::new)
-                .orElseGet(() -> new AppUserStatusFinderResponse(NOT_EXIST));
+        return appUserRepository.findByPhone(identifier)
+                .map(user -> new AppUserStatusFinderResponse(
+                        true,
+                        userAuthProviderRepository.findAllByUserId(user.getId()).stream().map(UserAuthProvider::getProvider).distinct().toList(),
+                        user.isEmailVerified(),
+                        user.getAppUserStatus()
+                ))
+                .orElseGet(AppUserStatusFinderResponse::notFound);
     }
 
     /**
@@ -86,9 +94,13 @@ public class PhoneAuthenticationServiceImpl implements AuthenticationService {
         AppUser appUser = new AppUser();
         appUser.setPhone(request.identifier());
         appUser.setPassword(passwordEncoder.encode(request.password()));
-        appUser.setAppUserStatus(CREATED);
+        appUser.setAppUserStatus(ACTIVE);
         try {
-            appUserRepository.save(appUser);
+            AppUser savedUser = appUserRepository.save(appUser);
+            UserAuthProvider localProvider = new UserAuthProvider();
+            localProvider.setUser(savedUser);
+            localProvider.setProvider(LOCAL);
+            userAuthProviderRepository.save(localProvider);
             meterRegistry.counter("auth.signup.success").increment();
             auditEventLogger.log("auth.signup", null, null, null, "success", "identifier_type=PHONE", null);
             return getUserStatus(request.identifier());
@@ -115,7 +127,6 @@ public class PhoneAuthenticationServiceImpl implements AuthenticationService {
         try {
             AppUser appUser = appUserRepository.findByPhone(identifier).orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
 
-            authCommonServices.updateUserStatus(appUser.getAppUserStatus(), appUser);
             authCommonServices.assignDefaultRole(appUser);
             appUserRepository.save(appUser);
             meterRegistry.counter("auth.signup.complete.success").increment();

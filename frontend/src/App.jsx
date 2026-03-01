@@ -2,7 +2,6 @@ import {Route, Routes, useNavigate} from 'react-router-dom';
 import {useCallback} from 'react';
 import {AuthProvider} from './context/AuthContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
-import AuthIdentifierPage from './pages/AuthIdentifierPage';
 import SignupPage from './pages/SignupPage';
 import OtpPage from './pages/OtpPage';
 import LoginPage from './pages/LoginPage';
@@ -40,7 +39,7 @@ const AppShell = () => {
             <ToastContainer/>
             <NetworkStatus/>
             <Routes>
-                <Route path="/" element={<AuthIdentifierPage/>}/>
+                <Route path="/" element={<LoginPage/>}/>
                 <Route path="/signup" element={<SignupPage/>}/>
                 <Route path="/otp" element={<OtpPage/>}/>
                 <Route path="/login" element={<LoginPage/>}/>

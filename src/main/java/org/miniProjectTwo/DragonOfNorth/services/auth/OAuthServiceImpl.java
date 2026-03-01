@@ -12,8 +12,10 @@ import org.miniProjectTwo.DragonOfNorth.enums.RoleName;
 import org.miniProjectTwo.DragonOfNorth.exception.BusinessException;
 import org.miniProjectTwo.DragonOfNorth.model.AppUser;
 import org.miniProjectTwo.DragonOfNorth.model.Role;
+import org.miniProjectTwo.DragonOfNorth.model.UserAuthProvider;
 import org.miniProjectTwo.DragonOfNorth.repositories.AppUserRepository;
 import org.miniProjectTwo.DragonOfNorth.repositories.RoleRepository;
+import org.miniProjectTwo.DragonOfNorth.repositories.UserAuthProviderRepository;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.JwtServices;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.OAuthService;
 import org.miniProjectTwo.DragonOfNorth.serviceInterfaces.SessionService;
@@ -35,6 +37,7 @@ public class OAuthServiceImpl implements OAuthService {
     private final JwtServices jwtServices;
     private final SessionService sessionService;
     private final AppUserRepository appUserRepository;
+    private final UserAuthProviderRepository userAuthProviderRepository;
     private final RoleRepository roleRepository;
     private final AuthCommonServiceImpl authCommonServiceImpl;
 
@@ -59,37 +62,9 @@ public class OAuthServiceImpl implements OAuthService {
     }
 
     private AppUser findOrCreateUser(OAuthUserInfo userInfo) {
-        Optional<AppUser> existingByProviderId = appUserRepository.findByProviderId(userInfo.sub());
+        Optional<UserAuthProvider> existingByProviderId = userAuthProviderRepository.findByProviderAndProviderId(Provider.GOOGLE, userInfo.sub());
         if (existingByProviderId.isPresent()) {
-            return existingByProviderId.get();
-        }
-
-        Optional<Provider> existingProvider = appUserRepository.findProviderByEmail(userInfo.email());
-        if (existingProvider.isPresent()) {
-            Provider provider = existingProvider.get();
-
-            AppUser existingByEmail = appUserRepository.findByEmail(userInfo.email())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND, "User not found"));
-
-            if (provider == Provider.LOCAL) {
-                existingByEmail.setProvider(Provider.GOOGLE);
-                existingByEmail.setProviderId(userInfo.sub());
-                existingByEmail.setEmailVerified(true);
-                return existingByEmail;
-            }
-
-            if (provider == Provider.GOOGLE) {
-                if (existingByEmail.getProviderId() == null) {
-                    existingByEmail.setProviderId(userInfo.sub());
-                    existingByEmail.setEmailVerified(true);
-                    return existingByEmail;
-                }
-                if (userInfo.sub().equals(existingByEmail.getProviderId())) {
-                    return existingByEmail;
-                }
-            }
-
-            throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS, "Email already associated with another OAuth provider");
+            return existingByProviderId.get().getUser();
         }
         return createNewUserWithRetry(userInfo);
     }
@@ -105,11 +80,9 @@ public class OAuthServiceImpl implements OAuthService {
         try {
             AppUser newUser = new AppUser();
             newUser.setEmail(userInfo.email());
-            newUser.setProvider(Provider.GOOGLE);
-            newUser.setProviderId(userInfo.sub());
             newUser.setEmailVerified(true);
             newUser.setPassword(null);
-            newUser.setAppUserStatus(AppUserStatus.VERIFIED);
+            newUser.setAppUserStatus(AppUserStatus.ACTIVE);
             newUser.setFailedLoginAttempts(0);
             newUser.setAccountLocked(false);
 
@@ -118,33 +91,35 @@ public class OAuthServiceImpl implements OAuthService {
                     .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND, "USER role not found"));
             newUser.setRoles(Set.of(userRole));
 
-            return appUserRepository.save(newUser);
+            AppUser savedUser = appUserRepository.save(newUser);
+            linkGoogleProvider(savedUser, userInfo.sub());
+            return savedUser;
 
         } catch (DataIntegrityViolationException e) {
             log.warn("Race condition during user creation, refetching: {}", userInfo.sub());
 
-            Optional<AppUser> byProviderId = appUserRepository.findByProviderId(userInfo.sub());
+            Optional<UserAuthProvider> byProviderId = userAuthProviderRepository.findByProviderAndProviderId(Provider.GOOGLE, userInfo.sub());
             if (byProviderId.isPresent()) {
-                return byProviderId.get();
+                return byProviderId.get().getUser();
             }
 
-            return appUserRepository.findByEmail(userInfo.email())
-                    .map(existingUser -> {
-                        if (existingUser.getProvider() == Provider.LOCAL) {
-                            existingUser.setProvider(Provider.GOOGLE);
-                            existingUser.setProviderId(userInfo.sub());
-                            existingUser.setEmailVerified(true);
-                            return existingUser;
-                        }
-                        if (existingUser.getProvider() == Provider.GOOGLE && userInfo.sub().equals(existingUser.getProviderId())) {
-                            return existingUser;
-                        }
-                        throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS,
-                                "Email already associated with another OAuth provider");
-                    })
-                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_CREATION_FAILED,
-                            "Failed to create user"));
+            AppUser existingUser = appUserRepository.findByEmailForUpdate(userInfo.email())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_CREATION_FAILED, "Failed to create user"));
+            existingUser.setEmailVerified(true);
+            linkGoogleProvider(existingUser, userInfo.sub());
+            return existingUser;
         }
+    }
+
+    private void linkGoogleProvider(AppUser appUser, String providerId) {
+        if (userAuthProviderRepository.existsByUserIdAndProvider(appUser.getId(), Provider.GOOGLE)) {
+            return;
+        }
+        UserAuthProvider provider = new UserAuthProvider();
+        provider.setUser(appUser);
+        provider.setProvider(Provider.GOOGLE);
+        provider.setProviderId(providerId);
+        userAuthProviderRepository.save(provider);
     }
 
 }
