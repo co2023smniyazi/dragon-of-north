@@ -50,7 +50,7 @@ public class GoogleTokenVerifierService {
             // Explicit audience validation (Google may return either a single string or a list)
             String audience = resolveAudience(payload.get("aud"));
             String expectedClientId = config.normalizedClientId();
-            if (audience == null || expectedClientId == null || !expectedClientId.equals(audience)) {
+            if (expectedClientId == null || !expectedClientId.equals(audience)) {
                 log.warn("Invalid audience: expected={}, actual={}", maskedClientId(), payload.get("aud"));
                 throw new InvalidOAuthTokenException("Invalid token");
             }
