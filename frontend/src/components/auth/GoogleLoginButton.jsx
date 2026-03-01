@@ -73,8 +73,6 @@ const GoogleLoginButton = ({onSuccess, onError, disabled = false, autoPrompt = f
 
     useEffect(() => {
         const clientId = API_CONFIG.GOOGLE_CLIENT_ID;
-        console.log("Google Client ID being used:", clientId);
-        console.log("Current origin:", window.location.origin);
         if (!clientId) {
             onError?.('Google login is not configured. Missing client ID.');
             setTimeout(() => {

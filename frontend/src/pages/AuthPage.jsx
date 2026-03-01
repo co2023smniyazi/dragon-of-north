@@ -158,7 +158,7 @@ const AuthPage = () => {
         navigate('/dashboard');
     };
 
-    // 🔥 CLEAN GOOGLE SUCCESS HANDLER
+    //  CLEAN GOOGLE SUCCESS HANDLER
     const handleGoogleSuccess = (data) => {
         const backendIdentifier =
             data?.identifier || data?.email;
