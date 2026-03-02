@@ -1,16 +1,25 @@
 # Dragon of North
 
-Production-grade identity platform built with Spring Boot + React, designed to demonstrate **mature auth architecture** rather than feature demos.
+Production-grade identity platform built with Spring Boot + React, focused on **secure token lifecycle**, **device-aware session control**, and **convergence of federated + local authentication** into one internal trust model.
 
 ## Architecture at a Glance
 
-**Core decision:** use stateless JWTs for API performance, but bind refresh behavior to a persisted session record for revocation, device controls, and incident response.
+**Core decision:** keep access authorization stateless (JWT), but anchor refresh and revocation to persisted device sessions.
 
 - **Local auth:** email/phone + password.
-- **Federated auth:** Google OAuth 2.0 Authorization Code flow (backend token verification + account linking).
+- **Federated auth:** Google OAuth 2.0 Authorization Code flow.
 - **Token model:** short-lived access token + rotating refresh token.
-- **Session model:** refresh token hash stored per device/session row.
-- **Operational posture:** Flyway migrations, structured audit logs, Micrometer metrics, Redis rate limits, integration tests via Testcontainers.
+- **Session model:** per-device session row with refresh hash-at-rest.
+- **Operational posture:** Flyway migrations, structured audit logs, Micrometer metrics, Redis rate limits, Testcontainers integration tests.
+
+```mermaid
+flowchart LR
+  A[Local Login or Google OAuth] --> B[Backend verification]
+  B --> C[Issue JWT access + refresh]
+  C --> D[Persist/Update device session]
+  D --> E[Refresh request]
+  E --> F[Rotate refresh token + update session hash]
+```
 
 ---
 
@@ -33,6 +42,7 @@ Production-grade identity platform built with Spring Boot + React, designed to d
 - Refresh token is rotated on use.
 - Only hashed refresh token is persisted in session storage.
 - Replay attempts fail once previous hash is invalidated.
+- Enforced as **single-use** with strict sequencing; parallel refresh replays are rejected once rotation commits.
 
 **Tradeoff:**
 - Requires strict refresh sequencing and careful race handling.
@@ -54,25 +64,18 @@ Google identities are stored in a provider-link table and mapped to internal use
 
 ## Federated Authentication Architecture
 
-OAuth is integrated as an **identity proofing step**, not a separate session system.
+OAuth is treated as an **identity proofing step**, not a parallel session system.
 
-1. Frontend completes Google OAuth Authorization Code flow.
-2. Backend receives Google token payload at:
-   - `POST /api/v1/auth/oauth/google` (login)
-   - `POST /api/v1/auth/oauth/google/signup` (signup)
-3. Backend verifies Google token, resolves/creates local user, links provider ID.
-4. Backend issues the same internal access/refresh tokens used by local login.
-5. Session row is created/updated exactly as in password login.
+- Google ID token is validated on the backend only (no frontend token trust).
+- Verification includes signature checks plus issuer/audience/expiration validation.
+- OAuth `state` is validated to protect the authorization code flow.
+- Verified identity is mapped/linked to local user, then standard internal JWT/session issuance is applied.
 
-```mermaid
-flowchart LR
-  G[Google OAuth] --> B[Backend token verification]
-  B --> U[User + provider-link resolution]
-  U --> T[Issue internal JWT access + refresh]
-  T --> S[Persist device session w/ refresh hash]
-```
+Endpoints:
+- `POST /api/v1/auth/oauth/google` (login)
+- `POST /api/v1/auth/oauth/google/signup` (signup)
 
-**Key architectural outcome:** OAuth and password auth converge into one session/revocation/audit pipeline.
+**Outcome:** OAuth and password auth converge into the same session/revocation/audit pipeline.
 
 ---
 
@@ -80,19 +83,14 @@ flowchart LR
 
 - **Stolen refresh token replay**  
   Mitigation: rotation + hash-at-rest + session validation.
-
 - **Compromised device/session**  
   Mitigation: device-scoped revocation endpoints and revoke-all fallback.
-
 - **Brute-force / OTP abuse**  
   Mitigation: Redis-backed distributed rate limiting + cooldown/block windows.
-
 - **OAuth identity mismatch or unsafe auto-linking**  
   Mitigation: explicit provider-ID linking rules and mismatch rejection.
-
 - **Password reset account takeover window**  
   Mitigation: OTP-gated reset + global session revocation on reset.
-
 - **Migration drift between environments**  
   Mitigation: Flyway versioned schema with startup migration enforcement.
 
@@ -119,39 +117,51 @@ flowchart LR
 - Session-table revocation semantics.
 - Structured audit logs across auth/session/otp events.
 - Endpoint-specific distributed rate limits.
-- Uniform error contract to reduce auth edge-case leakage.
+- Stable error contract to reduce auth edge-case leakage.
+
+### Security Posture Summary
+
+| Area | Current posture |
+|---|---|
+| Credential storage | Passwords/OTPs hashed before persistence |
+| Token security | Access JWT + rotating single-use refresh tokens with hash-at-rest |
+| Session control | Device-aware session table with targeted/global revocation |
+| Abuse prevention | Redis distributed rate limiting per endpoint |
+| Observability | Structured audit events + Micrometer counters + Prometheus export |
+| Schema integrity | Flyway versioned migrations with startup enforcement |
 
 ---
 
 ## Concrete Runtime Configuration
 
-Current defaults configured in `application.yaml`:
+Current defaults in `application.yaml`:
+- signup rate limit: capacity `3`, refill `3/60m`
+- login rate limit: capacity `10`, refill `10/15m`
+- OTP rate limit: capacity `5`, refill `5/30m`
+- Redis port: `6379`
+- Actuator exposure: `health,metrics,prometheus`
+- Session cleanup: `900000 ms` delay, revoked retention `7 days`
+- Flyway: enabled, baseline-on-migrate, clean-disabled
 
-- **Rate limits**
-  - signup: capacity `3`, refill `3/60m`
-  - login: capacity `10`, refill `10/15m`
-  - otp: capacity `5`, refill `5/30m`
-- **Redis**
-  - port `6379`
-- **Actuator exposure**
-  - `health,metrics,prometheus`
-- **Session cleanup scheduler**
-  - delay `900000 ms` (15 min)
-  - revoked retention `7 days`
-- **Flyway**
-  - enabled, baseline-on-migrate, clean-disabled
+Environment-resolved values include JWT TTLs, OTP windows, DB/Redis credentials, and Google client ID.
 
-Environment-resolved values include JWT expiration, OTP windows, DB/Redis credentials, and Google client ID.
+---
+
+## Error Contract Stability
+
+- Enum-driven error codes keep client handling stable across refactors.
+- Frontend/backend contracts remain deterministic for auth/session flows.
+- Uniform failures reduce auth edge-case leakage while preserving operator diagnostics.
 
 ---
 
 ## Observability & Operational Maturity
 
-- **Structured audit logging** for login/refresh/logout/session revoke/signup/otp/password-reset flows.
-- **Micrometer counters** for success/failure paths across auth and session actions.
-- **Prometheus endpoint** exposed via Spring Actuator.
-- **Flyway migrations** (V1–V7) for deterministic schema evolution.
-- **Integration tests with Testcontainers** for PostgreSQL + Redis-backed flows.
+- Structured audit logging across login/refresh/logout/session revoke/signup/otp/password-reset.
+- Micrometer counters for success/failure branches in auth/session flows.
+- Prometheus metrics via Spring Actuator.
+- Flyway migrations (`V1`–`V7`) for deterministic schema evolution.
+- Integration tests with Testcontainers for PostgreSQL + Redis-backed flows.
 
 ---
 
