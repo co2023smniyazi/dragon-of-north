@@ -10,7 +10,11 @@ Production-grade identity platform built with Spring Boot + React, focused on **
 - **Federated auth:** Google OAuth 2.0 Authorization Code flow.
 - **Token model:** short-lived access token + rotating refresh token.
 - **Session model:** per-device session row with refresh hash-at-rest.
+- **Access token TTL:** 15 minutes.
 - **Operational posture:** Flyway migrations, structured audit logs, Micrometer metrics, Redis rate limits, Testcontainers integration tests.
+- **API session policy:** `SessionCreationPolicy.STATELESS` for horizontal scalability.
+
+### Unified Auth Flow (Local + OAuth)
 
 ```mermaid
 flowchart LR
@@ -66,7 +70,9 @@ Google identities are stored in a provider-link table and mapped to internal use
 
 OAuth is treated as an **identity proofing step**, not a parallel session system.
 
-- Google ID token is validated on the backend only (no frontend token trust).
+Authorization code exchange happens server-side, and no Google tokens are trusted from the frontend.
+
+- Google ID token is validated on the backend.
 - Verification includes signature checks plus issuer/audience/expiration validation.
 - OAuth `state` is validated to protect the authorization code flow.
 - Verified identity is mapped/linked to local user, then standard internal JWT/session issuance is applied.
@@ -122,7 +128,7 @@ Endpoints:
 ### Security Posture Summary
 
 | Area | Current posture |
-|---|---|
+| --- | --- |
 | Credential storage | Passwords/OTPs hashed before persistence |
 | Token security | Access JWT + rotating single-use refresh tokens with hash-at-rest |
 | Session control | Device-aware session table with targeted/global revocation |
