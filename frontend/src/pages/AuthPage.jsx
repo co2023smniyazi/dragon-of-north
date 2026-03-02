@@ -17,11 +17,6 @@ const AUTH_STEP = {
     GOOGLE_SIGNUP: 'GOOGLE_SIGNUP',
 };
 
-const isGoogleEmail = (value) => {
-    const emailValue = value.trim().toLowerCase();
-    return emailValue.endsWith('@gmail.com') || emailValue.endsWith('@googlemail.com');
-};
-
 const AuthPage = () => {
     const navigate = useNavigate();
     const {toast} = useToast();
@@ -55,11 +50,7 @@ const AuthPage = () => {
         const hasGoogle = providers.includes('GOOGLE');
 
         if (!exists) {
-            setStep(
-                isGoogleEmail(normalizedEmail)
-                    ? AUTH_STEP.GOOGLE_SIGNUP
-                    : AUTH_STEP.SIGNUP_CREATE_PASSWORD
-            );
+            setStep(AUTH_STEP.SIGNUP_CREATE_PASSWORD);
             return;
         }
 
@@ -214,11 +205,16 @@ const AuthPage = () => {
         step === AUTH_STEP.PASSWORD_LOGIN ||
         step === AUTH_STEP.LOCAL_AND_GOOGLE;
 
+    const isSignupStep =
+        step === AUTH_STEP.SIGNUP_CREATE_PASSWORD ||
+        step === AUTH_STEP.GOOGLE_SIGNUP;
+
     const showGoogle =
         step === AUTH_STEP.EMAIL_ENTRY ||
         step === AUTH_STEP.GOOGLE_ONLY ||
         step === AUTH_STEP.LOCAL_AND_GOOGLE ||
-        step === AUTH_STEP.PASSWORD_LOGIN;
+        step === AUTH_STEP.PASSWORD_LOGIN ||
+        isSignupStep;
 
     return (
         <div className="auth-shell">
@@ -300,6 +296,20 @@ const AuthPage = () => {
 
                 {showGoogle && (
                     <div className="auth-section">
+                        {isSignupStep && (
+                            <p className="auth-helper">
+                                No account found. Create one with password or continue with Google.
+                            </p>
+                        )}
+                        {step === AUTH_STEP.SIGNUP_CREATE_PASSWORD && (
+                            <button
+                                type="button"
+                                className="btn-primary"
+                                onClick={() => navigate('/signup', {state: {identifier: normalizedEmail, identifierType: 'EMAIL'}})}
+                            >
+                                Sign up with password
+                            </button>
+                        )}
                         <GoogleLoginButton
                             onSuccess={handleGoogleSuccess}
                             onError={handleGoogleError}
@@ -308,6 +318,7 @@ const AuthPage = () => {
                                 step ===
                                 AUTH_STEP.GOOGLE_ONLY
                             }
+                            mode={isSignupStep ? 'signup' : 'login'}
                             expectedIdentifier={
                                 normalizedEmail
                             }

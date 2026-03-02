@@ -46,7 +46,7 @@ public class OAuthServiceImpl implements OAuthService {
     public void authenticatedWithGoogle(String idToken, String deviceId, String expectedIdentifier, HttpServletRequest httpRequest, HttpServletResponse response) {
         OAuthUserInfo userInfo = tokenVerifierService.verifyToken(idToken);
         validateExpectedIdentifier(userInfo, expectedIdentifier);
-        AppUser appUser = findExistingGoogleUser(userInfo);
+        AppUser appUser = findOrCreateUserForGoogleAuth(userInfo);
         finalizeAuthentication(appUser, deviceId, httpRequest, response);
     }
 
@@ -89,24 +89,21 @@ public class OAuthServiceImpl implements OAuthService {
         sessionService.createSession(appUser, refreshToken, ipAddress, deviceId, userAgent);
     }
 
-    private AppUser findExistingGoogleUser(OAuthUserInfo userInfo) {
+    private AppUser findOrCreateUserForGoogleAuth(OAuthUserInfo userInfo) {
         Optional<UserAuthProvider> existingByProviderId = userAuthProviderRepository.findByProviderAndProviderId(Provider.GOOGLE, userInfo.sub());
         if (existingByProviderId.isPresent()) {
             return existingByProviderId.get().getUser();
         }
 
         Optional<AppUser> existingByEmail = appUserRepository.findByEmailForUpdate(userInfo.email());
-        if (existingByEmail.isEmpty()) {
-            throw new BusinessException(ErrorCode.AUTHENTICATION_FAILED, "Google account is not registered. Please sign up first.");
+        if (existingByEmail.isPresent()) {
+            AppUser user = existingByEmail.get();
+            linkGoogleProvider(user, userInfo.sub());
+            user.setEmailVerified(true);
+            return user;
         }
 
-        AppUser user = existingByEmail.get();
-        if (userAuthProviderRepository.existsByUserIdAndProvider(user.getId(), Provider.GOOGLE)) {
-            throw new BusinessException(ErrorCode.INVALID_OAUTH_TOKEN, "Google account mismatch. Please login again.");
-        }
-
-        throw new BusinessException(ErrorCode.OAUTH_LINK_CONFIRMATION_REQUIRED,
-                "Account exists with password. Confirm password before linking Google.");
+        return createNewUserWithRetry(userInfo);
     }
 
     private AppUser findOrCreateUserForSignup(OAuthUserInfo userInfo) {
