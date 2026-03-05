@@ -10,7 +10,7 @@ import org.miniProjectTwo.DragonOfNorth.enums.IdentifierType;
  */
 public record AppUserSignUpCompleteRequest(
         @NotBlank
-        @Schema(description = "Identifier that has completed OTP verification.", example = "intern.candidate@example.com")
+        @Schema(description = "Identifier that has completed OTP verification.", example = "user2@example.com")
         String identifier,
         @NotNull
         @Schema(description = "Type of identifier used during sign-up.", allowableValues = {"EMAIL", "PHONE"}, example = "EMAIL")
