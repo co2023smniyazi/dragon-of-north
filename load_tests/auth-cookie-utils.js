@@ -2,8 +2,8 @@ import http from "k6/http";
 import {check} from "k6";
 
 export const BASE_URL = __ENV.BASE_URL || "https://dragon-api.duckdns.org";
-export const EMAIL = __ENV.EMAIL;
-export const PASSWORD = __ENV.PASSWORD;
+export const EMAIL = __ENV.EMAIL || "kartik123tijare@gmail.com";
+export const PASSWORD = __ENV.PASSWORD || "Password@123";
 
 export function requireCredentials() {
     if (!EMAIL || !PASSWORD) {
