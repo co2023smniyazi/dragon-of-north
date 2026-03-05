@@ -1,12 +1,7 @@
 import http from "k6/http";
 import {check, sleep} from "k6";
 import {Rate, Trend} from "k6/metrics";
-import {
-    BASE_URL,
-    applyManualCookies,
-    loginAndCaptureCookies,
-    requireCredentials,
-} from "./auth-cookie-utils.js";
+import {applyManualCookies, BASE_URL, loginAndCaptureCookies, requireCredentials,} from "./auth-cookie-utils.js";
 
 const logoutSuccessRate = new Rate("logout_success_rate");
 const logoutLatency = new Trend("logout_latency");

@@ -1,7 +1,7 @@
 import {check, sleep} from "k6";
 import {Rate, Trend} from "k6/metrics";
 import http from "k6/http";
-import {BASE_URL, captureAuthCookies, requireCredentials, EMAIL, PASSWORD} from "./auth-cookie-utils.js";
+import {BASE_URL, captureAuthCookies, EMAIL, PASSWORD, requireCredentials} from "./auth-cookie-utils.js";
 
 const loginSuccessRate = new Rate("login_success_rate");
 const loginCookieCaptureRate = new Rate("login_cookie_capture_rate");

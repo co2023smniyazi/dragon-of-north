@@ -2,8 +2,8 @@ import http from "k6/http";
 import {check, sleep} from "k6";
 import {Rate, Trend} from "k6/metrics";
 import {
-    BASE_URL,
     applyManualCookies,
+    BASE_URL,
     captureAuthCookies,
     loginAndCaptureCookies,
     requireCredentials,

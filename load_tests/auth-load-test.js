@@ -24,8 +24,8 @@ const loginInvalidCredRate = new Rate("login_invalid_cred_rate");
 const loginLatency = new Trend("login_latency");
 
 // Get test credentials from environment variables (safer than hardcoding)
-const TEST_IDENTIFIER = __ENV.TEST_IDENTIFIER || "test.user@example.com";
-const TEST_PASSWORD = __ENV.TEST_PASSWORD || "TestPassword123!";
+const TEST_IDENTIFIER = __ENV.TEST_IDENTIFIER || "kartik123tijare@gmail.com";
+const TEST_PASSWORD = __ENV.TEST_PASSWORD || "Password@123";
 
 export const options = {
     stages: [

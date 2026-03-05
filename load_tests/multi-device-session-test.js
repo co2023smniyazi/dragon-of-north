@@ -1,13 +1,7 @@
 import http from "k6/http";
 import {check, sleep} from "k6";
 import {Rate, Trend} from "k6/metrics";
-import {
-    BASE_URL,
-    captureAuthCookies,
-    requireCredentials,
-    EMAIL,
-    PASSWORD,
-} from "./auth-cookie-utils.js";
+import {BASE_URL, captureAuthCookies, EMAIL, PASSWORD, requireCredentials,} from "./auth-cookie-utils.js";
 
 const multiDeviceLoginSuccessRate = new Rate("multi_device_login_success_rate");
 const sessionListSuccessRate = new Rate("multi_device_session_list_success_rate");
