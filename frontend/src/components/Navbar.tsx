@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTheme } from "../context/ThemeContext";
 
 type ThemeMode = "light" | "dark" | "system";
 
@@ -29,7 +30,7 @@ const themeLabel = {
 } as const;
 
 const Navbar = () => {
-  const [theme, setTheme] = useState<ThemeMode>("system");
+  const { theme, setTheme } = useTheme();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -44,49 +45,6 @@ const Navbar = () => {
         : ["Login", "Sign Up"],
     [isAuthenticated],
   );
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("don-theme") as ThemeMode | null;
-
-    if (savedTheme && THEME_SEQUENCE.includes(savedTheme)) {
-      setTheme(savedTheme);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("don-theme", theme);
-
-    const root = document.documentElement;
-    const systemPrefersDark =
-      window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-    root.style.transition = "background-color 250ms ease, color 250ms ease";
-
-    if (theme === "dark" || (theme === "system" && systemPrefersDark)) {
-      root.classList.add("dark");
-      return;
-    }
-
-    root.classList.remove("dark");
-  }, [theme]);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const syncSystemTheme = () => {
-      if (theme !== "system") return;
-
-      if (mediaQuery.matches) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    };
-
-    syncSystemTheme();
-    mediaQuery.addEventListener("change", syncSystemTheme);
-
-    return () => mediaQuery.removeEventListener("change", syncSystemTheme);
-  }, [theme]);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
