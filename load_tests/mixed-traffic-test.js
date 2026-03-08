@@ -38,9 +38,9 @@ const protectedSuccessRate = new Rate("protected_success_rate");
 const protectedAuthErrorRate = new Rate("protected_auth_error_rate");
 
 // Configuration via environment variables
-const TEST_IDENTIFIER = __ENV.TEST_IDENTIFIER || "test.user@example.com";
-const TEST_PASSWORD = __ENV.TEST_PASSWORD || "TestPassword123!";
-const ACCESS_TOKEN = __ENV.ACCESS_TOKEN || "";
+const TEST_IDENTIFIER = __ENV.TEST_IDENTIFIER || "kartik123tijare@gmail.com";
+const TEST_PASSWORD = __ENV.TEST_PASSWORD || "Password@123";
+const ACCESS_TOKEN = __ENV.ACCESS_TOKEN || "eyJhbGciOiJSUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzX3Rva2VuIiwicm9sZXMiOlsiVVNFUiJdLCJpc3MiOiJkcmFnb24tb2Ytbm9ydGgtYXV0aCIsInN1YiI6ImMwYTg4MDA0LTljYWQtMWFkOC04MTljLWFkMGZlOTM0MDAxMSIsImlhdCI6MTc3MjgxNjc0NCwibmJmIjoxNzcyODE2NzQ0LCJleHAiOjE3NzI4MTc5NDR9.raNXEHwvYfc5b5m4eVTVs8y_utD9-0Z_V7BisDL-73bW17rJ-llX4IJiP0oiBnxw-lHSCibwBAuJ0XZsUnp6F1FXHYvrFaRZCoLMOxS-MnK9uxZ-CNODiitUqsGpnFfcbvvo0JCBThsluf8xsT1cjo4nkqfD_BGIrPf_N0pnclAghC_GITT18-9PJTi8hRvWgIFTd9kAx-aJ9eI2A67xlSmls_9hwwbFsaW-ZSQvZDfqg66F2C8FzRxIRRj7AVb2y_9kOMF1eeCSdbuSXO4-v64sL7B4re_SzqA-Qj_fxHjITpASo4BzgHJZjs9q9zcsw1fohKworjSWRYfgq701hg";
 
 export const options = {
     stages: [
