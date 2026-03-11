@@ -1,0 +1,75 @@
+import {useEffect, useMemo, useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {API_CONFIG} from '../config';
+import {apiService} from '../services/apiService';
+import {useAuth} from '../context/authUtils';
+
+const STATUS_MESSAGES = [
+    'Authenticating with Google...',
+    'Verifying your identity...',
+    'Creating secure session...',
+    'Redirecting to dashboard...',
+];
+
+const OAuthCallbackPage = () => {
+    const navigate = useNavigate();
+    const {login} = useAuth();
+    const [stepIndex, setStepIndex] = useState(0);
+
+    const activeMessage = useMemo(
+        () => STATUS_MESSAGES[Math.min(stepIndex, STATUS_MESSAGES.length - 1)],
+        [stepIndex]
+    );
+
+    useEffect(() => {
+        const progressInterval = window.setInterval(() => {
+            setStepIndex((prev) => Math.min(prev + 1, STATUS_MESSAGES.length - 1));
+        }, 850);
+
+        const redirectToLogin = () => {
+            localStorage.removeItem('isAuthenticated');
+            navigate('/login', {replace: true});
+        };
+
+        const verifySession = async () => {
+            const verificationRequest = apiService.get(API_CONFIG.ENDPOINTS.SESSIONS_ALL);
+            const timeoutPromise = new Promise((_, reject) => {
+                window.setTimeout(() => reject(new Error('verification-timeout')), 5000);
+            });
+
+            try {
+                const result = await Promise.race([verificationRequest, timeoutPromise]);
+                if (!apiService.isErrorResponse(result) && Array.isArray(result?.data)) {
+                    login();
+                    navigate('/dashboard', {replace: true});
+                    return;
+                }
+            } catch (error) {
+                console.warn('OAuth callback session verification failed:', error);
+            }
+
+            redirectToLogin();
+        };
+
+        verifySession();
+
+        return () => {
+            window.clearInterval(progressInterval);
+        };
+    }, [login, navigate]);
+
+    return (
+        <div className="auth-shell">
+            <div className="auth-card">
+                <h1 className="auth-title">Completing Sign-In</h1>
+                <p className="auth-subtitle">{activeMessage}</p>
+                <div className="auth-section flex items-center gap-3">
+                    <div className="db-spin h-5 w-5 rounded-full border-2 border-slate-500 border-t-[#4C7DFF]"/>
+                    <p className="text-sm text-slate-200">Please wait while we securely finish your login.</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default OAuthCallbackPage;

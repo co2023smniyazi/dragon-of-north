@@ -19,6 +19,7 @@ import FeaturesDocsPage from './pages/FeaturesDocsPage';
 import ArchitectureDocsPage from './pages/ArchitectureDocsPage';
 import SecurityDemoPage from './pages/SecurityDemoPage';
 import DeploymentDocsPage from './pages/DeploymentDocsPage';
+import OAuthCallbackPage from './pages/OAuthCallbackPage';
 
 const AppShell = () => {
     const navigate = useNavigate();
@@ -52,6 +53,7 @@ const AppShell = () => {
                 <Route path="/signup" element={<SignupPage/>}/>
                 <Route path="/otp" element={<OtpPage/>}/>
                 <Route path="/login" element={<AuthPage/>}/>
+                <Route path="/auth/callback" element={<OAuthCallbackPage/>}/>
                 <Route path="/forgot-password" element={<ForgotPasswordRequestPage/>}/>
                 <Route path="/reset-password" element={<ResetPasswordPage/>}/>
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardPage/></ProtectedRoute>}/>

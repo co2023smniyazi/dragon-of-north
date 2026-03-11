@@ -5,7 +5,7 @@ import {getDeviceId} from '../../utils/device';
 
 const GOOGLE_IDENTITY_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
 
-const GoogleLoginButton = ({onSuccess, onError, disabled = false, autoPrompt = false, mode = 'login', expectedIdentifier = ''}) => {
+const GoogleLoginButton = ({onSuccess, onError, onStart, disabled = false, autoPrompt = false, mode = 'login', expectedIdentifier = '', isRedirecting = false}) => {
     const buttonRef = useRef(null);
     const initializedRef = useRef(false);
     const expectedIdentifierRef = useRef(expectedIdentifier);
@@ -16,6 +16,23 @@ const GoogleLoginButton = ({onSuccess, onError, disabled = false, autoPrompt = f
     useEffect(() => {
         expectedIdentifierRef.current = expectedIdentifier;
     }, [expectedIdentifier]);
+
+    useEffect(() => {
+        const buttonNode = buttonRef.current;
+        if (!buttonNode || !onStart) return;
+
+        const handleClick = () => {
+            if (!disabled) {
+                onStart();
+            }
+        };
+
+        buttonNode.addEventListener('click', handleClick);
+
+        return () => {
+            buttonNode.removeEventListener('click', handleClick);
+        };
+    }, [disabled, onStart]);
 
     const decodeJWT = (token) => {
         try {
@@ -150,6 +167,7 @@ const GoogleLoginButton = ({onSuccess, onError, disabled = false, autoPrompt = f
         <div className="flex flex-col items-center gap-2" aria-busy={isInitializing}>
             <div ref={buttonRef} className={disabled ? 'pointer-events-none opacity-60' : ''}/>
             {isInitializing && <p className="text-xs text-slate-400">Loading Google sign-in...</p>}
+            {isRedirecting && <p className="text-sm font-medium text-slate-200">Redirecting to Google...</p>}
         </div>
     );
 };

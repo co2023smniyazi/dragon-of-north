@@ -27,6 +27,7 @@ const AuthPage = () => {
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(AUTH_STEP.EMAIL_ENTRY);
     const [passwordError, setPasswordError] = useState('');
+    const [isGoogleRedirecting, setIsGoogleRedirecting] = useState(false);
 
     const normalizedEmail = useMemo(
         () => email.trim().toLowerCase(),
@@ -43,6 +44,7 @@ const AuthPage = () => {
         setStep(AUTH_STEP.EMAIL_ENTRY);
         setPassword('');
         setPasswordError('');
+        setIsGoogleRedirecting(false);
     };
 
     const moveToStepFromProviders = ({exists, providers = []}) => {
@@ -106,7 +108,7 @@ const AuthPage = () => {
 
     const handleLocalLogin = async (event) => {
         event.preventDefault();
-        if (!password) return;
+        if (!password || isGoogleRedirecting) return;
 
         if (!normalizedEmail) {
             toast.error('Email is required');
@@ -165,7 +167,7 @@ const AuthPage = () => {
             identifier: backendIdentifier.toLowerCase(),
         });
 
-        navigate('/dashboard');
+        navigate('/auth/callback');
     };
 
     const handleGoogleError = (message) => {
@@ -198,7 +200,12 @@ const AuthPage = () => {
             return;
         }
 
+        setIsGoogleRedirecting(false);
         toast.error(resolvedMessage);
+    };
+
+    const handleGoogleStart = () => {
+        setIsGoogleRedirecting(true);
     };
 
     const isPasswordStep =
@@ -249,7 +256,7 @@ const AuthPage = () => {
                         <button
                             className="btn-primary"
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || isGoogleRedirecting}
                         >
                             {loading
                                 ? 'Checking...'
@@ -285,7 +292,7 @@ const AuthPage = () => {
                         />
                         <button
                             className="btn-primary"
-                            disabled={loading || !password}
+                            disabled={loading || !password || isGoogleRedirecting}
                         >
                             {loading
                                 ? 'Logging in...'
@@ -313,7 +320,9 @@ const AuthPage = () => {
                         <GoogleLoginButton
                             onSuccess={handleGoogleSuccess}
                             onError={handleGoogleError}
-                            disabled={loading}
+                            onStart={handleGoogleStart}
+                            disabled={loading || isGoogleRedirecting}
+                            isRedirecting={isGoogleRedirecting}
                             autoPrompt={
                                 step ===
                                 AUTH_STEP.GOOGLE_ONLY
