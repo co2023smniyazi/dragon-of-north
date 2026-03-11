@@ -2,6 +2,7 @@ package org.miniProjectTwo.DragonOfNorth.infrastructure.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.miniProjectTwo.DragonOfNorth.infrastructure.audit.AuditorAwareImpl;
@@ -53,6 +54,7 @@ public class BeansConfig {
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        objectMapper.registerModule(new JavaTimeModule());
         return objectMapper;
     }
 }

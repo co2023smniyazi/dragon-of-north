@@ -43,14 +43,14 @@ const GoogleLoginButton = ({onSuccess, onError, disabled = false, autoPrompt = f
         const payload = {
             // Send both payload keys for compatibility across backend naming strategies.
             id_token: credential,
-            idToken: credential,
+            // idToken: credential,
             device_id: getDeviceId(),
         };
 
         const normalizedExpectedIdentifier = expectedIdentifierRef.current?.trim().toLowerCase();
         if (normalizedExpectedIdentifier) {
             payload.expected_identifier = normalizedExpectedIdentifier;
-            payload.expectedIdentifier = normalizedExpectedIdentifier;
+            // payload.expectedIdentifier = normalizedExpectedIdentifier;
         }
 
         const result = await apiService.post(endpoint, payload);
