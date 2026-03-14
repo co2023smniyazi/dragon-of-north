@@ -54,8 +54,18 @@ const SecurityDemoPage = () => {
     };
 
     useEffect(() => {
-        if (!timelineRef.current) return;
-        timelineRef.current.scrollTop = timelineRef.current.scrollHeight;
+        const container = timelineRef.current;
+        if (!container) return;
+
+        const contentHeight = container.scrollHeight;
+        const viewportHeight = container.clientHeight;
+
+        if (contentHeight > viewportHeight * 1.5) {
+            container.scrollTo({
+                top: container.scrollHeight,
+                behavior: 'smooth',
+            });
+        }
     }, [events.length]);
 
     const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -211,9 +221,26 @@ const SecurityDemoPage = () => {
                 .simulation-canvas {
                     width: 900px;
                     min-height: 800px;
+                    padding-top: 50px;
                     margin: 0 auto;
                     position: relative;
                     display: block;
+                }
+                .actor-header-row {
+                    position: sticky;
+                    top: 0;
+                    z-index: 10;
+                    background: inherit;
+                    padding-top: 8px;
+                    padding-bottom: 8px;
+                    width: 900px;
+                    margin: 0 auto;
+                }
+                .actor-header-card {
+                    position: absolute;
+                    width: 150px;
+                    height: 50px;
+                    transform: translateX(-50%);
                 }
                 .arrow-line {
                     stroke-dasharray: 260;
@@ -258,11 +285,22 @@ const SecurityDemoPage = () => {
 
                 <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#0d1326] to-[#101b35] p-4" style={{minHeight: 780}}>
                     <div ref={timelineRef} className="simulation-frame rounded-xl border border-white/10 bg-black/15 p-2">
+                        <div className="actor-header-row">
+                            {ACTORS.map((actor) => (
+                                <div
+                                    key={actor.id}
+                                    className="actor-header-card rounded-xl border border-slate-500 bg-slate-900/90"
+                                    style={{left: actor.x, top: 0}}
+                                >
+                                    <p className="pt-3 text-center text-[17px] font-semibold text-slate-100">{actor.label}</p>
+                                </div>
+                            ))}
+                            <div style={{height: 66}} />
+                        </div>
+
                         <svg width={CANVAS_WIDTH} height={diagramHeight} className="simulation-canvas">
                             {ACTORS.map((actor) => (
                                 <g key={actor.id}>
-                                    <rect x={actor.x - 75} y={20} width="150" height="50" rx="12" className="fill-slate-900/90 stroke-slate-500" />
-                                    <text x={actor.x} y={52} textAnchor="middle" className="fill-slate-100 text-[17px] font-semibold">{actor.label}</text>
                                     <line x1={actor.x} y1={70} x2={actor.x} y2={diagramHeight - 30} className="stroke-slate-500" strokeDasharray="8 8" />
                                 </g>
                             ))}
