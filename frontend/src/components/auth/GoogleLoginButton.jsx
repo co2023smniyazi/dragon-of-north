@@ -80,7 +80,7 @@ const GoogleLoginButton = ({onSuccess, onError, onStart, disabled = false, autoP
             return;
         }
 
-        // Pass both the backend response and the email from token
+        // Pass both the backend response and the email from a token
         onSuccess?.({
             ...result?.data,
             email: emailFromToken,

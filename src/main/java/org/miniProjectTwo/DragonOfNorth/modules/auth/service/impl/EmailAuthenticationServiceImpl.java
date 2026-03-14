@@ -31,7 +31,7 @@ import static org.miniProjectTwo.DragonOfNorth.shared.enums.Provider.LOCAL;
  *
  * @see AuthenticationServiceResolver for service selection
  * @see AuthCommonServices for shared authentication logic
- */
+ **/
 @Service
 @RequiredArgsConstructor
 public class EmailAuthenticationServiceImpl implements AuthenticationService {
@@ -59,8 +59,14 @@ public class EmailAuthenticationServiceImpl implements AuthenticationService {
     /**
      * Retrieves user registration status for email identifier.
      * <p>
-     * Queries a database for email-based user status or returns NOT_EXIST
-     * if user not found. Critical for frontend authentication flow guidance.
+     * Queries the database for an email-based user's current status.
+     * <p>
+     * If the user is not present in the database, this method returns a
+     * {@code AppUserStatusFinderResponse.notFound()} result. For existing
+     * users the response contains the current {@code AppUser.appUserStatus}
+     * (for example {@code ACTIVE} or {@code LOCKED/DELETED}) along with
+     * provider information and the email-verified flag. This information is
+     * consumed by the frontend to decide the next authentication step.
      *
      * @param identifier email address to check
      * @return user status response or NOT_EXIST status
@@ -71,7 +77,11 @@ public class EmailAuthenticationServiceImpl implements AuthenticationService {
         return appUserRepository.findByEmail(identifier)
                 .map(user -> new AppUserStatusFinderResponse(
                         true,
-                        userAuthProviderRepository.findAllByUserId(user.getId()).stream().map(UserAuthProvider::getProvider).distinct().toList(),
+                        userAuthProviderRepository.findAllByUserId(user.getId())
+                                .stream()
+                                .map(UserAuthProvider::getProvider)
+                                .distinct()
+                                .toList(),
                         user.isEmailVerified(),
                         user.getAppUserStatus()
                 ))
@@ -81,9 +91,12 @@ public class EmailAuthenticationServiceImpl implements AuthenticationService {
     /**
      * Creates a new user account with email identifier.
      * <p>
-     * Encrypts password, sets CREATED status, and persists user to a database.
-     * Does not assign roles or verify email - handled in completion flow.
-     * Critical for user registration initiation.
+     * Encrypts the provided password, persists a new user record and sets the
+     * initial account state. In the current model the service sets the user
+     * {@code AppUser.appUserStatus} to {@code ACTIVE} and leaves
+     * {@code emailVerified} as {@code false}. Role assignment and any
+     * additional activation steps are handled in the completion flow.
+     * This method is critical for initiating the user registration process.
      *
      * @param request sign-up request with email and password
      * @return created user status response
@@ -115,9 +128,14 @@ public class EmailAuthenticationServiceImpl implements AuthenticationService {
     /**
      * Completes user registration with email verification.
      * <p>
-     * Updates user status to VERIFIED, assigns a default USER role, sets
-     * an email verification flag, and persists changes transactionally.
-     * Critical for enabling full authentication capabilities.
+     * Finalizes registration after verification (for example, after a
+     * successful OTP/email verification). This method assigns a default
+     * USER role, sets the {@code emailVerified} flag to {@code true} and
+     * persists changes transactionally so the user can fully authenticate.
+     * Note: the method does not assume the use of intermediary statuses like
+     * {@code CREATED} or {@code VERIFIED} — it updates verification state and
+     * performs role provisioning according to the current status model
+     * (e.g. the account may already be {@code ACTIVE}).
      *
      * @param identifier email address to complete registration
      * @return updated user status response

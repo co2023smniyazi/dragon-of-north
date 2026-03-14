@@ -30,7 +30,32 @@ import static org.springframework.http.HttpStatus.CREATED;
 
 /**
  * REST controller for authentication operations.
- */
+ *
+ * <h2>API Index</h2>
+ * <p>Quick navigation to the endpoints implemented by this controller. Click the method
+ * names to jump to the implementation below:</p>
+ * <ul>
+ *   <li>{@link #findUserStatus(org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.AppUserStatusFinderRequest)}
+ *       - POST <code>/api/v1/auth/identifier/status</code></li>
+ *   <li>{@link #signupUser(org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.AppUserSignUpRequest)}
+ *       - POST <code>/api/v1/auth/identifier/sign-up</code></li>
+ *   <li>{@link #completeUserSignup(org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.AppUserSignUpCompleteRequest)}
+ *       - POST <code>/api/v1/auth/identifier/sign-up/complete</code></li>
+ *   <li>{@link #loginUser(org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.AppUserLoginRequest, jakarta.servlet.http.HttpServletResponse, jakarta.servlet.http.HttpServletRequest)}
+ *       - POST <code>/api/v1/auth/identifier/login</code></li>
+ *   <li>{@link #refreshToken(jakarta.servlet.http.HttpServletRequest, jakarta.servlet.http.HttpServletResponse, org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.DeviceIdRequest)}
+ *       - POST <code>/api/v1/auth/jwt/refresh</code></li>
+ *   <li>{@link #logoutUser(jakarta.servlet.http.HttpServletResponse, jakarta.servlet.http.HttpServletRequest, org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.DeviceIdRequest)}
+ *       - POST <code>/api/v1/auth/identifier/logout</code></li>
+ *   <li>{@link #requestPasswordResetOtp(org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.PasswordResetRequestOtpRequest)}
+ *       - POST <code>/api/v1/auth/password/forgot/request</code></li>
+ *   <li>{@link #resetPassword(org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.PasswordResetConfirmRequest)}
+ *       - POST <code>/api/v1/auth/password/forgot/reset</code></li>
+ * </ul>
+ *
+ * <p>The list above provides a quick index for new maintainers; each {@code @link} points
+ * to the corresponding handler method in this class.</p>
+ **/
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor

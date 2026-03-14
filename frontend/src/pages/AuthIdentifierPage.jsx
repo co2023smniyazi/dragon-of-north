@@ -83,26 +83,35 @@ const AuthIdentifierPage = () => {
             return;
         }
 
-        const status = result.data?.app_user_status;
-        if (status === 'NOT_EXIST') {
+        const data = result?.data || {};
+        const status = data.app_user_status;
+        const exists = Boolean(data.exists);
+        const emailVerified = Boolean(data.email_verified);
+
+        if (!exists || status === 'NOT_EXIST' || status === 'NOT_EXISTS') {
             setNotExistChoice({identifier: processedIdentifier, identifierType, allowGoogleSignup: identifierType === 'EMAIL' && isGoogleEmail(processedIdentifier)});
-        } else if (status === 'CREATED') {
-            const otpEndpoint = identifierType === 'EMAIL' ? API_CONFIG.ENDPOINTS.EMAIL_OTP_REQUEST : API_CONFIG.ENDPOINTS.PHONE_OTP_REQUEST;
-            const otpPayload = identifierType === 'EMAIL' ? {email: processedIdentifier, otp_purpose: 'SIGNUP'} : {phone: processedIdentifier, otp_purpose: 'SIGNUP'};
-            const otpResult = await apiService.post(otpEndpoint, otpPayload);
-            if (apiService.isErrorResponse(otpResult)) {
-                toast.error(otpResult.message || 'Failed to send OTP.');
-                setLoading(false);
-                return;
-            }
-            toast.success('OTP sent successfully.');
-            navigate('/otp', {state: {identifier: processedIdentifier, identifierType}});
-        } else if (status === 'VERIFIED') {
-            navigate('/login', {state: {identifier: processedIdentifier}});
-        } else if (status === 'BLOCKED') {
+        } else if (status === 'LOCKED' || status === 'DELETED' || status === 'BLOCKED') {
             setBlockedMessage('Your account is blocked. Please contact support.');
+        } else if (status === 'ACTIVE' || status === 'CREATED' || status === 'VERIFIED') {
+            if (emailVerified || status === 'VERIFIED') {
+                navigate('/login', {state: {identifier: processedIdentifier}});
+            } else {
+                const otpEndpoint = identifierType === 'EMAIL' ? API_CONFIG.ENDPOINTS.EMAIL_OTP_REQUEST : API_CONFIG.ENDPOINTS.PHONE_OTP_REQUEST;
+                const otpPayload = identifierType === 'EMAIL' ? {
+                    email: processedIdentifier,
+                    otp_purpose: 'SIGNUP'
+                } : {phone: processedIdentifier, otp_purpose: 'SIGNUP'};
+                const otpResult = await apiService.post(otpEndpoint, otpPayload);
+                if (apiService.isErrorResponse(otpResult)) {
+                    toast.error(otpResult.message || 'Failed to send OTP.');
+                    setLoading(false);
+                    return;
+                }
+                toast.success('OTP sent successfully.');
+                navigate('/otp', {state: {identifier: processedIdentifier, identifierType}});
+            }
         } else {
-            toast.warning(`Unexpected user status: ${status}`);
+            toast.warning(`Unexpected user status: ${status ?? 'UNKNOWN'}`);
         }
 
         setLoading(false);
