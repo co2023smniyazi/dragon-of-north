@@ -60,7 +60,7 @@ const SecurityDemoPage = () => {
         const contentHeight = container.scrollHeight;
         const viewportHeight = container.clientHeight;
 
-        if (contentHeight > viewportHeight * 1.5) {
+        if (contentHeight > viewportHeight) {
             container.scrollTo({
                 top: container.scrollHeight,
                 behavior: 'smooth',
