@@ -47,6 +47,7 @@ const SecurityDemoPage = () => {
     const eventIdRef = useRef(1);
     const runRef = useRef(0);
     const timelineRef = useRef(null);
+    const simulationStartedRef = useRef(false);
 
     const addLog = (msg) => {
         const ts = new Date().toLocaleTimeString();
@@ -55,7 +56,12 @@ const SecurityDemoPage = () => {
 
     useEffect(() => {
         const container = timelineRef.current;
-        if (!container) return;
+        if (!container || events.length === 0) return;
+
+        if (!simulationStartedRef.current) {
+            simulationStartedRef.current = true;
+            return;
+        }
 
         const contentHeight = container.scrollHeight;
         const viewportHeight = container.clientHeight;
@@ -158,6 +164,11 @@ const SecurityDemoPage = () => {
         runRef.current = runId;
         setRunning(true);
 
+        simulationStartedRef.current = false;
+        if (timelineRef.current) {
+            timelineRef.current.scrollTop = 0;
+        }
+
         const oldToken = initialRefresh.id;
         const rotatedToken = tokenId();
 
@@ -185,6 +196,10 @@ const SecurityDemoPage = () => {
 
     const resetSimulation = () => {
         runRef.current = 0;
+        simulationStartedRef.current = false;
+        if (timelineRef.current) {
+            timelineRef.current.scrollTop = 0;
+        }
         setRunning(false);
         setSimState('READY');
         setSessionStatus('idle');
