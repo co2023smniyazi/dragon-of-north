@@ -49,7 +49,7 @@ public class CorsConfig {
                 "http://127.0.0.1:*",
                 "https://app.verloren.dev",
                 "https://*.verloren.dev",
-                "https://api.verloren.dev"
+                "https://app.verloren.dev"
         ));
 
         config.setAllowedMethods(List.of(
