@@ -6,6 +6,7 @@ export const API_CONFIG = {
     // API Endpoints
     ENDPOINTS: {
         // Authentication
+        CSRF: '/api/v1/auth/csrf',
         IDENTIFIER_STATUS: '/api/v1/auth/identifier/status',
         SIGNUP: '/api/v1/auth/identifier/sign-up',
         SIGNUP_COMPLETE: '/api/v1/auth/identifier/sign-up/complete',
@@ -38,7 +39,11 @@ export const API_CONFIG = {
     // Default headers
     HEADERS: {
         'Content-Type': 'application/json',
-    }
+    },
+
+    // CSRF token settings used by frontend clients.
+    CSRF_COOKIE_NAME: 'XSRF-TOKEN',
+    CSRF_HEADER_NAME: 'X-XSRF-TOKEN',
 };
 
 // Helper function to get full API URL

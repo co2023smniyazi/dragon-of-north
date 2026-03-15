@@ -48,6 +48,7 @@ const OtpPage = () => {
     };
 
     const completeSignup = async () => {
+        // Finalization API after OTP success: POST /api/v1/auth/identifier/sign-up/complete
         const result = await apiService.post(API_CONFIG.ENDPOINTS.SIGNUP_COMPLETE, {identifier, identifier_type: identifierType});
         if (apiService.isErrorResponse(result)) {
             toast.error(result.message || 'Failed to complete registration.');
@@ -75,6 +76,7 @@ const OtpPage = () => {
         }
 
         setLoading(true);
+        // Verification API: /api/v1/otp/email/verify or /api/v1/otp/phone/verify (otp_purpose=SIGNUP)
         const endpoint = identifierType === 'EMAIL' ? API_CONFIG.ENDPOINTS.EMAIL_OTP_VERIFY : API_CONFIG.ENDPOINTS.PHONE_OTP_VERIFY;
         const payload = identifierType === 'EMAIL' ? {email: identifier, otp: otpCode, otp_purpose: 'SIGNUP'} : {phone: identifier, otp: otpCode, otp_purpose: 'SIGNUP'};
         const verifyResult = await apiService.post(endpoint, payload);
@@ -86,6 +88,7 @@ const OtpPage = () => {
         }
 
         if (verifyResult?.api_response_status === 'success') {
+            // Backend contract: OTP verify success gates sign-up completion call.
             await completeSignup();
         } else {
             toast.error(verifyResult?.message || 'Invalid OTP. Please try again.');
@@ -98,6 +101,7 @@ const OtpPage = () => {
         if (timer > 0) return;
         setResendLoading(true);
 
+        // Resend uses the same OTP request APIs as initial signup OTP issuance.
         const endpoint = identifierType === 'EMAIL' ? API_CONFIG.ENDPOINTS.EMAIL_OTP_REQUEST : API_CONFIG.ENDPOINTS.PHONE_OTP_REQUEST;
         const payload = identifierType === 'EMAIL' ? {email: identifier, otp_purpose: 'SIGNUP'} : {phone: identifier, otp_purpose: 'SIGNUP'};
         const result = await apiService.post(endpoint, payload);

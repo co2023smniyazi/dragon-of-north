@@ -39,7 +39,7 @@ stateDiagram-v2
     ActiveSession --> SessionTerminated: User logout/revocation
     SessionTerminated --> Unauthenticated: Clear tokens
     note right of Authenticated: User identity verified
-    note right of TokenIssued: JWT contains: user ID, roles, expiration
+    note right of TokenIssued: JWT contains user ID, roles, expiration
     note right of TokenValidation: Verify signature + expiration
     note right of TokenRefreshed: Rotate refresh token family
 ```

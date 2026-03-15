@@ -2,6 +2,7 @@ import {API_CONFIG} from '../config';
 import {getDeviceId} from '../utils/device';
 import {mapErrorCodeToMessage} from '../utils/errorMapper';
 import {exponentialBackoffDelay, shouldRetryRequest, wait} from '../utils/networkUtils';
+import {CSRF_HEADER_NAME, ensureCsrfToken, isStateChangingMethod} from '../utils/csrf';
 
 class ApiService {
     constructor() {
@@ -60,11 +61,16 @@ class ApiService {
 
         this.isRefreshing = true;
 
-        this.refreshPromise = fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REFRESH_TOKEN}`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            credentials: 'include',
-            body: JSON.stringify({device_id: getDeviceId()}),
+        this.refreshPromise = ensureCsrfToken().then(csrfToken => {
+            return fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REFRESH_TOKEN}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [CSRF_HEADER_NAME]: csrfToken,
+                },
+                credentials: 'include',
+                body: JSON.stringify({device_id: getDeviceId()}),
+            });
         }).then(res => {
             if (!res.ok) {
                 throw new Error('Refresh failed');
@@ -106,7 +112,17 @@ class ApiService {
             ...options,
         };
 
+        const method = (defaultOptions.method || 'GET').toUpperCase();
+
         try {
+            if (isStateChangingMethod(method)) {
+                const csrfToken = await ensureCsrfToken();
+                defaultOptions.headers = {
+                    ...defaultOptions.headers,
+                    [CSRF_HEADER_NAME]: csrfToken,
+                };
+            }
+
             const response = await fetch(url, defaultOptions);
             this.extractRateLimitHeaders(response);
 

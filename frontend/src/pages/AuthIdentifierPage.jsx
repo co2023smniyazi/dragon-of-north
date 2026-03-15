@@ -61,6 +61,7 @@ const AuthIdentifierPage = () => {
         const processedIdentifier = identifierType === 'PHONE' ? normalizePhone(trimmed) : trimmed;
         setLoading(true);
 
+        // Backend lookup: POST /api/v1/auth/identifier/status
         const result = await apiService.post(API_CONFIG.ENDPOINTS.IDENTIFIER_STATUS, {
             identifier: processedIdentifier,
             identifier_type: identifierType,
@@ -83,6 +84,7 @@ const AuthIdentifierPage = () => {
             return;
         }
 
+        // Response contract used here: data.exists, data.app_user_status, data.email_verified
         const data = result?.data || {};
         const status = data.app_user_status;
         const exists = Boolean(data.exists);
@@ -96,6 +98,7 @@ const AuthIdentifierPage = () => {
             if (emailVerified || status === 'VERIFIED') {
                 navigate('/login', {state: {identifier: processedIdentifier}});
             } else {
+                // Existing but unverified account: request SIGNUP OTP before allowing completion.
                 const otpEndpoint = identifierType === 'EMAIL' ? API_CONFIG.ENDPOINTS.EMAIL_OTP_REQUEST : API_CONFIG.ENDPOINTS.PHONE_OTP_REQUEST;
                 const otpPayload = identifierType === 'EMAIL' ? {
                     email: processedIdentifier,

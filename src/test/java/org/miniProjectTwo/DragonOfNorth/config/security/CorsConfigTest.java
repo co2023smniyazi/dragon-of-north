@@ -24,6 +24,8 @@ class CorsConfigTest {
         assertNotNull(config);
         assertTrue(config.getAllowedOriginPatterns() != null &&
                 config.getAllowedOriginPatterns().contains("http://localhost:*"));
+        assertTrue(config.getAllowedOriginPatterns() != null &&
+                config.getAllowedOriginPatterns().contains("https://app.verloren.dev"));
         assertTrue(config.getAllowedMethods() != null &&
                 config.getAllowedMethods().contains("GET"));
         assertTrue(config.getExposedHeaders() != null &&

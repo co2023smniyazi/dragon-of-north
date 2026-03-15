@@ -56,9 +56,11 @@ const GoogleLoginButton = ({onSuccess, onError, onStart, disabled = false, autoP
         const decodedToken = decodeJWT(credential);
         const emailFromToken = decodedToken?.email;
 
+        // Backend endpoint depends on flow mode:
+        // signup -> POST /api/v1/auth/oauth/google/signup, login -> POST /api/v1/auth/oauth/google
         const endpoint = mode === 'signup' ? API_CONFIG.ENDPOINTS.OAUTH_GOOGLE_SIGNUP : API_CONFIG.ENDPOINTS.OAUTH_GOOGLE;
         const payload = {
-            // Send both payload keys for compatibility across backend naming strategies.
+            // Backend payload contract for OAuth exchange.
             id_token: credential,
             // idToken: credential,
             device_id: getDeviceId(),
@@ -72,6 +74,7 @@ const GoogleLoginButton = ({onSuccess, onError, onStart, disabled = false, autoP
 
         const result = await apiService.post(endpoint, payload);
 
+        // Frontend expects standard ApiResponse with api_response_status === 'success'.
         if (apiService.isErrorResponse(result) || result?.api_response_status !== 'success') {
             const fallbackMessage = mode === 'signup'
                 ? 'Google signup failed. Please try again.'

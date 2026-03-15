@@ -2,6 +2,7 @@ package org.miniProjectTwo.DragonOfNorth.security.config;
 
 import lombok.RequiredArgsConstructor;
 import org.miniProjectTwo.DragonOfNorth.security.filter.JwtFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -9,13 +10,14 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
@@ -63,8 +65,32 @@ public class SecurityConfig {
             "/actuator/prometheus"
     };
 
+    /**
+     * Ant-style request matcher patterns that bypass CSRF protection.
+     * <p>These endpoints are publicly accessible or have specific security requirements
+     * that make CSRF protection unnecessary or problematic:
+     * - Actuator and documentation endpoints (public access)
+     * - Pre-authentication endpoints (no CSRF tokens available yet)
+     * - OAuth endpoints (external token exchange flows)
+     */
+    public static final String[] csrf_bypass_urls = {
+            "/actuator/**",
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            // Public pre-auth lookup endpoint; keep it callable without CSRF bootstrap race.
+            "/api/v1/auth/identifier/status",
+            // Public login endpoint should not fail when the browser token bootstrap is out of sync.
+            "/api/v1/auth/identifier/login",
+            // Google OAuth token exchange is a public pre-auth flow.
+            "/api/v1/auth/oauth/google",
+            "/api/v1/auth/oauth/google/signup"
+    };
+
     private final CorsConfigurationSource corsConfigurationSource;
     private final JwtFilter jwtFilter;
+
+    @Value("${app.security.cookie.same-site}")
+    private String sameSitePolicy;
 
     /**
      * Configures the HTTP security filter chain.
@@ -83,9 +109,15 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(final HttpSecurity httpSecurity) {
+        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+        requestHandler.setCsrfRequestAttributeName("_csrf");
+
         return httpSecurity
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(csrfTokenRepository())
+                        .csrfTokenRequestHandler(requestHandler)
+                        .ignoringRequestMatchers(csrf_bypass_urls))
                 .authorizeHttpRequests
                         (auth -> auth
                                 .requestMatchers(public_urls).permitAll()
@@ -105,6 +137,18 @@ public class SecurityConfig {
                         )
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .build();
+    }
+
+    @Bean
+    public CookieCsrfTokenRepository csrfTokenRepository() {
+        CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repository.setCookieName("XSRF-TOKEN");
+        repository.setHeaderName("X-XSRF-TOKEN");
+        repository.setCookiePath("/");
+        repository.setCookieCustomizer(cookie -> cookie
+                .sameSite(sameSitePolicy)
+                .secure(true));
+        return repository;
     }
 
     @Bean

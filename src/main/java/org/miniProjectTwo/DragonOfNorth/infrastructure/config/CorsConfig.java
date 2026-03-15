@@ -47,16 +47,20 @@ public class CorsConfig {
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:*",
                 "http://127.0.0.1:*",
-                "https://dragon-of-north.vercel.app",
-                "https://*.vercel.app",
-                "https://dragon-api.duckdns.org"
+                "https://app.verloren.dev",
+                "https://*.verloren.dev",
+                "https://api.verloren.dev"
         ));
 
         config.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
 
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedHeaders(List.of(
+                "Content-Type",
+                "Authorization",
+                "X-XSRF-TOKEN",
+                "X-Requested-With"));
 
         // Enable cookies / Authorization header
         config.setAllowCredentials(true);

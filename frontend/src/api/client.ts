@@ -1,3 +1,5 @@
+import {CSRF_HEADER_NAME, ensureCsrfToken, isStateChangingMethod} from '../utils/csrf';
+
 type RequestConfig = {
     baseURL?: string;
     url?: string;
@@ -65,9 +67,18 @@ const create = (defaults: RequestConfig) => {
             },
         });
 
+        const requestMethod = merged.method || 'GET';
+        const isMutatingRequest = isStateChangingMethod(requestMethod);
+        const requestHeaders = {...(merged.headers || {})};
+
+        if (isMutatingRequest) {
+            const csrfToken = await ensureCsrfToken();
+            requestHeaders[CSRF_HEADER_NAME] = csrfToken;
+        }
+
         const response = await fetch(`${merged.baseURL || ''}${merged.url || ''}`, {
             method: merged.method || 'GET',
-            headers: merged.headers,
+            headers: requestHeaders,
             credentials: merged.withCredentials ? 'include' : 'same-origin',
             body: merged.data ? JSON.stringify(merged.data) : undefined,
         });

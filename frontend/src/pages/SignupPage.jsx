@@ -82,6 +82,7 @@ const SignupPage = () => {
 
         setLoading(true);
 
+        // Step 1: persist account via POST /api/v1/auth/identifier/sign-up.
         const signupResult = await apiService.post(API_CONFIG.ENDPOINTS.SIGNUP, {
             identifier,
             identifier_type: identifierType,
@@ -105,6 +106,7 @@ const SignupPage = () => {
             return;
         }
 
+        // Step 2: only after sign-up success, request OTP for SIGNUP verification.
         const otpEndpoint = identifierType === 'EMAIL' ? API_CONFIG.ENDPOINTS.EMAIL_OTP_REQUEST : API_CONFIG.ENDPOINTS.PHONE_OTP_REQUEST;
         const otpPayload = identifierType === 'EMAIL' ? {email: identifier, otp_purpose: 'SIGNUP'} : {phone: identifier, otp_purpose: 'SIGNUP'};
         const otpResult = await apiService.post(otpEndpoint, otpPayload);

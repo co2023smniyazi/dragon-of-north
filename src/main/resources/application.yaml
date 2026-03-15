@@ -38,6 +38,8 @@ app:
       expiration:
         access-token: ${access_token}
         refresh-token: ${refresh_token}
+    cookie:
+      same-site: ${cookie_same_site}
 
 otp:
   length: ${otp_length}
