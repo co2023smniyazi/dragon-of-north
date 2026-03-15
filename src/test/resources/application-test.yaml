@@ -29,6 +29,11 @@ db_port: 5432
 db_username: test
 db_password: test
 db_ddl_auto: create-drop
+redis_host: localhost
+redis_password: ""
+cookie_same_site: Lax
+backend_url: localhost:8080
+google_client_id: test-google-client-id
 
 access_token: 60000          # 1 minute (shorter for faster tests)
 refresh_token: 300000       # 5 minutes (shorter for faster tests)
