@@ -22,6 +22,21 @@ const FLOW_STEPS = [
     'FRONTEND_ROUTE',
 ];
 
+const SCENARIO_HELPERS = [
+    {
+        identifier: 'new@domain.com',
+        notes: ['user does not exist', 'SIGNUP_REQUIRED'],
+    },
+    {
+        identifier: 'unverified@domain.com',
+        notes: ['user exists but email_verified=false', 'EMAIL_VERIFICATION_REQUIRED'],
+    },
+    {
+        identifier: 'active@domain.com',
+        notes: ['user exists and email_verified=true', 'LOGIN_ALLOWED'],
+    },
+];
+
 const mockResultForIdentifier = (rawIdentifier) => {
     const identifier = rawIdentifier.trim().toLowerCase();
     if (identifier === 'new@domain.com') {
@@ -219,6 +234,26 @@ const IdentifierFlowPage = () => {
                             className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                             placeholder="new@domain.com / unverified@domain.com / active@domain.com"
                         />
+
+                        <div className="mt-3 rounded-lg border border-white/10 bg-slate-900/60 p-3">
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-200">Test Identifiers (Simulation Scenarios)</p>
+                            <div className="space-y-2">
+                                {SCENARIO_HELPERS.map((scenario) => (
+                                    <div key={scenario.identifier} className="rounded-md border border-white/10 bg-black/20 p-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIdentifier(scenario.identifier)}
+                                            disabled={running}
+                                            className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            {scenario.identifier}
+                                        </button>
+                                        <p className="mt-1 text-xs text-slate-300">→ {scenario.notes[0]}</p>
+                                        <p className="text-xs text-emerald-300">→ {scenario.notes[1]}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                     <button type="button" disabled={running} onClick={startSimulation} className="rounded-lg border border-cyan-300/60 bg-cyan-400/10 px-5 py-3 text-sm font-semibold text-cyan-100 disabled:opacity-50">
                         {running ? 'Running Simulation...' : 'Run Simulation'}
