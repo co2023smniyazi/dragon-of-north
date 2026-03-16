@@ -126,11 +126,18 @@ class ApiService {
             const response = await fetch(url, defaultOptions);
             this.extractRateLimitHeaders(response);
 
-            if (response.status === 401 && retry) {
-                const data = await this.parseBody(response);
+            let data = null;
 
-                // Only refresh token for actual token expiration, not for login authentication failures
-                if (data?.error_code === 'TOK_001' && endpoint !== API_CONFIG.ENDPOINTS.LOGIN) {
+            if (response.status === 401 && retry) {
+                data = await this.parseBody(response);
+                const shouldAttemptRefresh = ![
+                    API_CONFIG.ENDPOINTS.LOGIN,
+                    API_CONFIG.ENDPOINTS.REFRESH_TOKEN,
+                    API_CONFIG.ENDPOINTS.LOGOUT,
+                    API_CONFIG.ENDPOINTS.CSRF,
+                ].includes(endpoint);
+
+                if (shouldAttemptRefresh) {
                     try {
                         await this.refreshToken();
                         return this.request(endpoint, options, false, attempt);
@@ -144,7 +151,9 @@ class ApiService {
                 // If it's not a token expiration, continue to normal error handling
             }
 
-            const data = await this.parseBody(response);
+            if (data === null) {
+                data = await this.parseBody(response);
+            }
 
             if (!response.ok) {
                 const normalizedError = this.normalizeApiError(data, 'An error occurred');

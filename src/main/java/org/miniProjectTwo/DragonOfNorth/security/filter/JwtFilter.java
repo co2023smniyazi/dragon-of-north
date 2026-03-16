@@ -115,6 +115,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             String tokenType = claims.get("token_type", String.class);
             if (!"access_token".equals(tokenType)) {
+                SecurityContextHolder.clearContext();
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -156,9 +157,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
             }
 
-
-        } catch (Exception ex) {
+        } catch (RuntimeException ex) {
             log.debug("JWT processing failed: {}", ex.getMessage());
+            SecurityContextHolder.clearContext();
 
             filterChain.doFilter(request, response);
             return;

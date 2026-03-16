@@ -21,6 +21,7 @@ import org.miniProjectTwo.DragonOfNorth.shared.exception.BusinessException;
 import org.miniProjectTwo.DragonOfNorth.shared.model.Role;
 import org.miniProjectTwo.DragonOfNorth.shared.repository.RoleRepository;
 import org.miniProjectTwo.DragonOfNorth.shared.util.AuditEventLogger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -57,6 +58,12 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
     private final UserAuthProviderRepository userAuthProviderRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditEventLogger auditEventLogger;
+
+    @Value("${app.security.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${app.security.cookie.same-site:Lax}")
+    private String cookieSameSite;
 
     /**
      * Authenticates user credentials and issues JWT tokens.
@@ -317,20 +324,20 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
     public void setAccessToken(HttpServletResponse response, String token) {
         Cookie accessCookie = new Cookie("access_token", token);
         accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(true);
+        accessCookie.setSecure(cookieSecure);
         accessCookie.setPath("/");
         accessCookie.setMaxAge(60 * 15);
-        accessCookie.setAttribute("SameSite", "None");
+        accessCookie.setAttribute("SameSite", cookieSameSite);
         response.addCookie(accessCookie);
     }
 
     public void clearAccessTokenCookie(HttpServletResponse response) {
         Cookie accessCookie = new Cookie("access_token", "");
         accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(true);
+        accessCookie.setSecure(cookieSecure);
         accessCookie.setPath("/");
         accessCookie.setMaxAge(0);
-        accessCookie.setAttribute("SameSite", "None");
+        accessCookie.setAttribute("SameSite", cookieSameSite);
         response.addCookie(accessCookie);
     }
 
@@ -345,10 +352,10 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
     public void clearRefreshTokenCookie(HttpServletResponse response) {
         Cookie refrehCookie = new Cookie("refresh_token", "");
         refrehCookie.setHttpOnly(true);
-        refrehCookie.setSecure(true);
+        refrehCookie.setSecure(cookieSecure);
         refrehCookie.setPath("/");
         refrehCookie.setMaxAge(0);
-        refrehCookie.setAttribute("SameSite", "None");
+        refrehCookie.setAttribute("SameSite", cookieSameSite);
         response.addCookie(refrehCookie);
     }
 
@@ -364,10 +371,10 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
     public void setRefreshToken(HttpServletResponse response, String token) {
         Cookie refreshCookie = new Cookie("refresh_token", token);
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
+        refreshCookie.setSecure(cookieSecure);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
-        refreshCookie.setAttribute("SameSite", "None");
+        refreshCookie.setAttribute("SameSite", cookieSameSite);
         response.addCookie(refreshCookie);
     }
 }

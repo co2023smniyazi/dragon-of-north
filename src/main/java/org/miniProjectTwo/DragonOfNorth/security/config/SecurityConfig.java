@@ -2,6 +2,9 @@ package org.miniProjectTwo.DragonOfNorth.security.config;
 
 import lombok.RequiredArgsConstructor;
 import org.miniProjectTwo.DragonOfNorth.security.filter.JwtFilter;
+import org.miniProjectTwo.DragonOfNorth.security.handler.RestAccessDeniedHandler;
+import org.miniProjectTwo.DragonOfNorth.security.handler.RestAuthenticationEntryPoint;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -87,12 +90,20 @@ public class SecurityConfig {
 
     private final CorsConfigurationSource corsConfigurationSource;
     private final JwtFilter jwtFilter;
+    private final RestAuthenticationEntryPoint authenticationEntryPoint;
+    private final RestAccessDeniedHandler accessDeniedHandler;
+
+    @Value("${app.security.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${app.security.cookie.same-site:Lax}")
+    private String cookieSameSite;
 
     /**
      * Configures the HTTP security filter chain.
      *
      * <p>Pipeline summary:
-     * - Disables CSRF protections (suitable for stateless REST APIs).
+     * - Enables cookie-based CSRF protection for browser requests.
      * - Allows anonymous access to {@link #public_urls}.
      * - Requires authentication for all other requests.
      * - Adds the {@link #jwtFilter} before {@link UsernamePasswordAuthenticationFilter}
@@ -114,6 +125,9 @@ public class SecurityConfig {
                         .csrfTokenRepository(csrfTokenRepository())
                         .csrfTokenRequestHandler(requestHandler)
                         .ignoringRequestMatchers(csrf_bypass_urls))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests
                         (auth -> auth
                                 .requestMatchers(public_urls).permitAll()
@@ -142,8 +156,8 @@ public class SecurityConfig {
         repository.setHeaderName("X-XSRF-TOKEN");
         repository.setCookiePath("/");
         repository.setCookieCustomizer(cookie -> cookie
-                .sameSite("None")
-                .secure(true));
+                .sameSite(cookieSameSite)
+                .secure(cookieSecure));
         return repository;
     }
 

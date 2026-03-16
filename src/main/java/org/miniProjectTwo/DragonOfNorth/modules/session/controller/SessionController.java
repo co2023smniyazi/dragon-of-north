@@ -14,7 +14,6 @@ import org.miniProjectTwo.DragonOfNorth.modules.session.dto.response.SessionSumm
 import org.miniProjectTwo.DragonOfNorth.modules.session.service.SessionService;
 import org.miniProjectTwo.DragonOfNorth.shared.dto.api.ApiResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +30,6 @@ public class SessionController {
     private final SessionService sessionService;
 
     @GetMapping("/get/all")
-    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "List current user sessions", description = "Returns all active/revoked sessions mapped to the authenticated user.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Sessions fetched"),

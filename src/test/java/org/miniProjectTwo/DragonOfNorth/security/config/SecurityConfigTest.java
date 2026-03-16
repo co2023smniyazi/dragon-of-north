@@ -3,8 +3,9 @@ package org.miniProjectTwo.DragonOfNorth.security.config;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.miniProjectTwo.DragonOfNorth.security.config.SecurityConfig;
 import org.miniProjectTwo.DragonOfNorth.security.filter.JwtFilter;
+import org.miniProjectTwo.DragonOfNorth.security.handler.RestAccessDeniedHandler;
+import org.miniProjectTwo.DragonOfNorth.security.handler.RestAuthenticationEntryPoint;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,10 +34,14 @@ class SecurityConfigTest {
     private AuthenticationManager authenticationManager;
 
     private SecurityConfig securityConfig;
+    @Mock
+    private RestAuthenticationEntryPoint authenticationEntryPoint;
+    @Mock
+    private RestAccessDeniedHandler accessDeniedHandler;
 
     @BeforeEach
     void setUp() {
-        securityConfig = new SecurityConfig(corsConfigurationSource, jwtFilter);
+        securityConfig = new SecurityConfig(corsConfigurationSource, jwtFilter, authenticationEntryPoint, accessDeniedHandler);
     }
 
     @Test
