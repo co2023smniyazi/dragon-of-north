@@ -35,10 +35,12 @@ export const ThemeProvider = ({children}) => {
 
         if (resolveIsDark(theme)) {
             root.classList.add('dark');
+            root.setAttribute('data-theme', 'dark');
             return;
         }
 
         root.classList.remove('dark');
+        root.setAttribute('data-theme', 'light');
     }, [theme]);
 
     useEffect(() => {
@@ -49,8 +51,10 @@ export const ThemeProvider = ({children}) => {
 
             if (mediaQuery.matches) {
                 document.documentElement.classList.add('dark');
+                document.documentElement.setAttribute('data-theme', 'dark');
             } else {
                 document.documentElement.classList.remove('dark');
+                document.documentElement.setAttribute('data-theme', 'light');
             }
         };
 

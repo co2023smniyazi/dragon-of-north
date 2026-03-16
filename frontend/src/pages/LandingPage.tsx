@@ -8,8 +8,7 @@ import AuthorSection from '../components/AuthorSection';
 
 const LandingPage = () => {
     return (
-        <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#090c14] via-[#0d1322] to-[#090c14] text-slate-100">
-            <div className="dynamic-grid-overlay" aria-hidden />
+        <div className="relative min-h-screen overflow-hidden" style={{color: 'var(--don-text-secondary)'}}>
             <Navbar />
 
             <main className="relative z-10 mx-auto w-full max-w-[1600px] px-4 pb-12 pt-20 sm:px-6 lg:px-8">

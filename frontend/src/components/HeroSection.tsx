@@ -26,18 +26,13 @@ const nodeMap = Object.fromEntries(SESSION_NODES.map((node) => [node.id, node]))
 
 const HeroSection = () => {
     return (
-        <section className="relative isolate overflow-hidden bg-slate-950 px-6 pb-20 pt-28 text-slate-100 sm:px-10 lg:px-16 lg:pb-28 lg:pt-36">
+        <section className="hero relative isolate overflow-hidden px-6 pb-20 pt-28 sm:px-10 lg:px-16 lg:pb-28 lg:pt-36">
             <motion.div
                 aria-hidden
                 className="pointer-events-none absolute inset-0"
-                animate={{
-                    background: [
-                        'radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.20), transparent 42%), radial-gradient(circle at 80% 12%, rgba(168, 85, 247, 0.15), transparent 38%), linear-gradient(130deg, #020617 0%, #0f172a 50%, #111827 100%)',
-                        'radial-gradient(circle at 20% 24%, rgba(56, 189, 248, 0.26), transparent 44%), radial-gradient(circle at 78% 16%, rgba(168, 85, 247, 0.20), transparent 40%), linear-gradient(130deg, #020617 0%, #0b1220 50%, #111827 100%)',
-                        'radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.20), transparent 42%), radial-gradient(circle at 80% 12%, rgba(168, 85, 247, 0.15), transparent 38%), linear-gradient(130deg, #020617 0%, #0f172a 50%, #111827 100%)',
-                    ],
+                style={{
+                    background: 'radial-gradient(ellipse 900px 600px at 60% 20%, rgba(107, 87, 255, 0.055) 0%, transparent 65%)'
                 }}
-                transition={{duration: 16, ease: 'easeInOut', repeat: Infinity}}
             />
 
 
@@ -70,8 +65,7 @@ const HeroSection = () => {
                 </svg>
             </div>
 
-            <div className="pointer-events-none absolute -top-24 left-1/2 h-[24rem] w-[24rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
-            <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-fuchsia-500/10 blur-3xl" />
+
 
             <svg
                 aria-hidden
@@ -102,25 +96,25 @@ const HeroSection = () => {
                     transition={{duration: 0.7, ease: 'easeOut'}}
                     className="space-y-8"
                 >
-                    <div className="inline-flex items-center rounded-full border border-cyan-400/25 bg-cyan-300/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">
+                    <div className="hero-eyebrow">
                         Session Security Platform
                     </div>
 
-                    <h1 className="max-w-2xl text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
+                    <h1>
                         Control Every Session. See Every Device. Trust Nothing.
                     </h1>
 
-                    <p className="max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                    <p className="hero-subtitle">
                         Dragon of North is a session-aware authentication system that allows developers to monitor devices,
                         revoke sessions, and maintain complete control over account security.
                     </p>
 
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="hero-actions">
                         <motion.a
                             href="#session-game"
-                            whileHover={{y: -2, scale: 1.02}}
+                            whileHover={{y: -2}}
                             whileTap={{scale: 0.98}}
-                            className="inline-flex items-center justify-center rounded-lg bg-cyan-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_0_32px_rgba(34,211,238,0.25)] transition hover:bg-cyan-400"
+                            className="btn-hero"
                         >
                             Get Started
                         </motion.a>
@@ -128,9 +122,9 @@ const HeroSection = () => {
                             href="https://dragon-api.duckdns.org/swagger-ui/index.html#/"
                             target="_blank"
                             rel="noreferrer"
-                            whileHover={{y: -2, scale: 1.02}}
+                            whileHover={{y: -2}}
                             whileTap={{scale: 0.98}}
-                            className="inline-flex items-center justify-center rounded-lg border border-slate-500/60 bg-slate-900/40 px-6 py-3 text-sm font-semibold text-slate-100 backdrop-blur-sm transition hover:border-cyan-300/70 hover:text-cyan-100"
+                            className="btn-hero-ghost"
                         >
                             API Documentation
                         </motion.a>
@@ -143,11 +137,11 @@ const HeroSection = () => {
                     transition={{duration: 0.8, delay: 0.15, ease: 'easeOut'}}
                     className="relative mx-auto w-full max-w-xl"
                 >
-                    <div className="relative overflow-hidden rounded-3xl border border-cyan-300/20 bg-slate-900/40 p-6 shadow-[0_30px_80px_rgba(6,182,212,0.18)] backdrop-blur-xl">
-                        <div className="absolute -left-24 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-cyan-400/20 blur-3xl" />
-                        <div className="absolute -right-20 top-12 h-32 w-32 rounded-full bg-fuchsia-400/20 blur-3xl" />
-
-                        <div className="relative aspect-[4/3] w-full rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4">
+                    <div className="card relative overflow-hidden p-6">
+                        <div className="relative aspect-[4/3] w-full rounded-2xl p-4" style={{
+                            background: 'var(--don-bg-surface)',
+                            border: '1px solid var(--don-border-default)'
+                        }}>
                             <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
                                 {CONNECTIONS.map(([from, to], index) => {
                                     const start = nodeMap[from as keyof typeof nodeMap];
@@ -159,7 +153,7 @@ const HeroSection = () => {
                                             y1={start.y}
                                             x2={end.x}
                                             y2={end.y}
-                                            stroke="rgba(34,211,238,0.38)"
+                                            stroke="var(--don-accent-border)"
                                             strokeWidth="0.5"
                                             initial={{opacity: 0.25}}
                                             animate={{opacity: [0.25, 0.65, 0.25]}}
@@ -177,12 +171,14 @@ const HeroSection = () => {
                             {SESSION_NODES.map((node) => (
                                 <motion.div
                                     key={node.id}
-                                    className="absolute rounded-full border border-cyan-200/70 bg-cyan-300/90 shadow-[0_0_25px_rgba(56,189,248,0.8)]"
+                                    className="absolute rounded-full"
                                     style={{
                                         width: `${node.size}px`,
                                         height: `${node.size}px`,
                                         left: `calc(${node.x}% - ${node.size / 2}px)`,
                                         top: `calc(${node.y}% - ${node.size / 2}px)`,
+                                        background: 'var(--don-accent)',
+                                        border: '1px solid var(--don-accent-border)',
                                     }}
                                     animate={{
                                         y: [0, -10, 0],
@@ -195,9 +191,7 @@ const HeroSection = () => {
                                         repeat: Infinity,
                                         ease: 'easeInOut',
                                     }}
-                                >
-                                    <div className="absolute inset-0 rounded-full bg-cyan-100/80 blur-[2px]" />
-                                </motion.div>
+                                />
                             ))}
                         </div>
                     </div>

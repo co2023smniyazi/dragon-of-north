@@ -154,65 +154,83 @@ const DashboardPage = () => {
         toast.success(result?.message || 'Other sessions revoked successfully.');
     };
 
-    const metricCards = [
-        {label: 'Total Sessions', value: animatedTotal, variant: 'violet'},
-        {label: 'Active Sessions', value: animatedActive, variant: 'mint'},
-        {label: 'Revoked Sessions', value: animatedRevoked, variant: 'amber'},
-    ];
-
     return (
         <div className="dashboard-shell">
             <header className="dashboard-header">
                 <div className="dashboard-header__inner">
-                    <div>
-                        <h1 className="dashboard-title">Dashboard</h1>
-                        <p className="dashboard-subtitle">Session-aware authentication center</p>
+                    <div className="page-header mb-0">
+                        <h1 className="page-title mb-1">Dashboard</h1>
+                        <p className="page-subtitle">Session-aware authentication center</p>
                     </div>
-                    <button onClick={handleLogout} disabled={isLoggingOut} className="db-btn db-btn-secondary">
+                    <button onClick={handleLogout} disabled={isLoggingOut} className="btn-subtle">
                         {isLoggingOut ? <span className="inline-flex items-center gap-2"><Spinner size="sm"/> Logging out...</span> : 'Logout'}
                     </button>
                 </div>
             </header>
 
             <main className="dashboard-main">
-                <div className="db-card db-card-hover">
-                    <h2 className="db-section-title">Account Information</h2>
-                    <p className="db-text-muted">Identifier: <span className="db-text-primary">{user?.identifier || 'Not available'}</span></p>
-                    <p className="db-text-muted">Current Device ID: <span className="db-mono">{currentDeviceId}</span></p>
-                    <p className="mt-3 text-sm text-[#A0A8B8]">Active sessions on other devices: <span className="db-accent-violet">{activeOtherDevices}</span></p>
+                <div className="card">
+                    <div className="card-header">
+                        <h2 className="card-title">Account Information</h2>
+                    </div>
+                    <div className="space-y-2">
+                        <p style={{color: 'var(--don-text-secondary)', fontSize: '14px'}}>
+                            Identifier: <span style={{
+                            color: 'var(--don-text-primary)',
+                            fontWeight: 500
+                        }}>{user?.identifier || 'Not available'}</span>
+                        </p>
+                        <p style={{color: 'var(--don-text-secondary)', fontSize: '14px'}}>
+                            Current Device: <span className="cell-mono ip-addr">{currentDeviceId}</span>
+                        </p>
+                        <p style={{color: 'var(--don-text-secondary)', fontSize: '14px'}}>
+                            Active on other devices: <span
+                            style={{color: 'var(--don-accent-text)', fontWeight: 600}}>{activeOtherDevices}</span>
+                        </p>
+                    </div>
                 </div>
 
-                <div className="db-metric-grid">
-                    {metricCards.map((metric) => (
-                        <div key={metric.label} className="db-card db-card-hover">
-                            <h3 className="db-metric-label">{metric.label}</h3>
-                            <p className={`db-metric-value db-metric-${metric.variant}`}>{metric.value}</p>
+                <div className="stats-grid">
+                    <div className="stat-card">
+                        <div className="stat-value">{animatedTotal}</div>
+                        <div className="stat-label">Total Sessions</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-value" style={{color: 'var(--don-success)'}}>{animatedActive}</div>
+                        <div className="stat-label">Active Sessions</div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-value" style={{color: 'var(--don-warning)'}}>{animatedRevoked}</div>
+                        <div className="stat-label">Revoked Sessions</div>
+                    </div>
+                </div>
+
+                <div id="sessions-section" className="card">
+                    <div className="card-header">
+                        <h2 className="card-title">Session Management</h2>
+                        <div className="flex flex-wrap gap-3">
+                            <button onClick={() => loadSessions(true)} disabled={!isAuthenticated}
+                                    className="btn-subtle">
+                                <span className={refreshSpinning ? 'db-spin' : ''}>↻</span>
+                                Refresh
+                            </button>
+                            <button onClick={revokeOthers} className="btn-danger">Revoke All Other Devices</button>
                         </div>
-                    ))}
-                </div>
-
-                <div id="sessions-section" className="db-card">
-                    <div className="mb-5 flex flex-wrap gap-3">
-                        <button onClick={() => loadSessions(true)} disabled={!isAuthenticated} className="db-btn db-btn-secondary">
-                            <span className={`inline-flex items-center gap-2 ${refreshSpinning ? 'db-spin' : ''}`}>↻</span>
-                            Refresh Sessions
-                        </button>
-                        <button onClick={revokeOthers} className="db-btn db-btn-primary">Graceful logout on all devices</button>
                     </div>
 
                     {loadingSessions ? (
-                        <div className="space-y-3">
+                        <div className="space-y-3 mt-4">
                             <Skeleton className="h-10 w-full"/>
                             <Skeleton className="h-10 w-full"/>
                             <Skeleton className="h-10 w-full"/>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto rounded-xl border border-white/10">
-                            <table className="db-table">
+                        <div className="table-wrapper mt-4">
+                            <table className="table">
                                 <thead>
                                 <tr>
                                     <th>Device ID</th>
-                                    <th>IP</th>
+                                    <th>IP Address</th>
                                     <th>Last Used</th>
                                     <th>Expires</th>
                                     <th>Status</th>
@@ -223,24 +241,28 @@ const DashboardPage = () => {
                                 {sessions.map((session) => {
                                     const isCurrentDevice = session.device_id === currentDeviceId;
                                     return (
-                                        <tr key={session.session_id} className="db-table-row">
-                                            <td className="db-mono">
+                                        <tr key={session.session_id}>
+                                            <td className="cell-mono">
                                                 {session.device_id}
-                                                {isCurrentDevice && <span className="db-chip db-chip-violet ml-2">current</span>}
+                                                {isCurrentDevice && <span className="badge-accent ml-2">current</span>}
                                             </td>
-                                            <td>{session.ip_address || '-'}</td>
-                                            <td>{session.last_used_at ? new Date(session.last_used_at).toLocaleString() : '-'}</td>
-                                            <td>{session.expiry_date ? new Date(session.expiry_date).toLocaleString() : '-'}</td>
+                                            <td className="cell-mono cell-ip">{session.ip_address || '-'}</td>
+                                            <td className="cell-mono cell-timestamp">{session.last_used_at ? new Date(session.last_used_at).toLocaleString() : '-'}</td>
+                                            <td className="cell-mono cell-timestamp">{session.expiry_date ? new Date(session.expiry_date).toLocaleString() : '-'}</td>
                                             <td>
                                                 {session.revoked
-                                                    ? <span className="db-chip db-chip-coral">Revoked</span>
-                                                    : <span className="db-chip db-chip-mint">Active</span>}
+                                                    ? <span className="badge badge-danger">Revoked</span>
+                                                    : <span className="badge badge-success">Active</span>}
                                             </td>
                                             <td>
                                                 <button
                                                     onClick={() => revokeSession(session.session_id)}
                                                     disabled={session.revoked || isCurrentDevice}
-                                                    className="db-btn db-btn-inline"
+                                                    className="btn-subtle text-xs px-3 py-1"
+                                                    style={session.revoked || isCurrentDevice ? {
+                                                        opacity: 0.4,
+                                                        cursor: 'not-allowed'
+                                                    } : {}}
                                                 >
                                                     Revoke
                                                 </button>

@@ -2,24 +2,16 @@ import React, {useEffect, useMemo, useRef, useState} from 'react';
 
 const variantStyles = {
     success: {
-        accent: 'border-l-[#22c55e]',
-        iconColor: 'text-[#22c55e]',
-        progressColor: 'bg-[#22c55e]',
+        colorVar: 'var(--don-success)',
     },
     error: {
-        accent: 'border-l-[#ef4444]',
-        iconColor: 'text-[#ef4444]',
-        progressColor: 'bg-[#ef4444]',
+        colorVar: 'var(--don-danger)',
     },
     warning: {
-        accent: 'border-l-[#f59e0b]',
-        iconColor: 'text-[#f59e0b]',
-        progressColor: 'bg-[#f59e0b]',
+        colorVar: 'var(--don-warning)',
     },
     info: {
-        accent: 'border-l-[#3b82f6]',
-        iconColor: 'text-[#3b82f6]',
-        progressColor: 'bg-[#3b82f6]',
+        colorVar: 'var(--don-info)',
     },
 };
 
@@ -103,16 +95,16 @@ const Toast = ({title, message, variant = 'info', duration = 4000, onClose}) => 
             onMouseLeave={() => setIsPaused(false)}
             onFocusCapture={() => setIsPaused(true)}
             onBlurCapture={() => setIsPaused(false)}
-            className={`relative w-full overflow-hidden rounded-xl border border-white/10 border-l-4 bg-[#0f172a] shadow-2xl transition-all duration-200 ${styles.accent} ${isVisible ? 'translate-y-0 scale-100 opacity-100' : '-translate-y-2 scale-[0.98] opacity-0'}`}
+            className={`toast ${variant} ${isVisible ? 'translate-y-0 scale-100 opacity-100' : '-translate-y-2 scale-[0.98] opacity-0'} relative w-full overflow-hidden transition-all duration-200`}
         >
-            <div className="flex items-start gap-3 px-4 py-3">
-                <div className={`mt-0.5 ${styles.iconColor}`}>
+            <div className="flex items-start gap-3">
+                <div className="mt-0.5" style={{color: styles.colorVar}}>
                     <VariantIcon variant={variant} />
                 </div>
 
                 <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-[#f9fafb]">{title}</p>
-                    {message && <p className="mt-1 text-sm text-[#9ca3af]">{message}</p>}
+                    <p className="toast-title">{title}</p>
+                    {message && <p className="toast-body mt-1">{message}</p>}
                 </div>
 
                 <button
@@ -121,7 +113,10 @@ const Toast = ({title, message, variant = 'info', duration = 4000, onClose}) => 
                         window.setTimeout(() => onClose(), 120);
                     }}
                     aria-label="Dismiss notification"
-                    className="rounded p-1.5 text-[#9ca3af] transition hover:text-[#f9fafb] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+                    className="rounded p-1.5 transition focus:outline-none"
+                    style={{color: 'var(--don-text-muted)'}}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--don-text-primary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--don-text-muted)'}
                 >
                     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
                         <path fill="currentColor" d="m18.3 5.71-1.41-1.42L12 9.17 7.11 4.29 5.7 5.71 10.59 10.6 5.7 15.49l1.41 1.42L12 12l4.89 4.91 1.41-1.42-4.89-4.89z"/>
@@ -130,10 +125,10 @@ const Toast = ({title, message, variant = 'info', duration = 4000, onClose}) => 
             </div>
 
             {duration > 0 && (
-                <div className="h-0.5 w-full bg-white/5">
+                <div className="h-0.5 w-full mt-3" style={{background: 'rgba(255, 255, 255, 0.05)'}}>
                     <div
-                        className={`h-full transition-[width] duration-100 ease-linear ${styles.progressColor}`}
-                        style={{width: `${progressPct}%`}}
+                        className="h-full transition-[width] duration-100 ease-linear"
+                        style={{width: `${progressPct}%`, background: styles.colorVar}}
                     />
                 </div>
             )}
