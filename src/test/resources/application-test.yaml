@@ -32,6 +32,7 @@ db_ddl_auto: create-drop
 redis_host: localhost
 redis_password: ""
 cookie_same_site: None
+cookie_secure: false
 backend_url: localhost:8080
 google_client_id: test-google-client-id
 
