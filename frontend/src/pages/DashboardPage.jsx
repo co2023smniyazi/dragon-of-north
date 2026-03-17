@@ -169,7 +169,7 @@ const DashboardPage = () => {
             </header>
 
             <main className="dashboard-main">
-                <div className="card">
+                <div className="card dashboard-card">
                     <div className="card-header">
                         <h2 className="card-title">Account Information</h2>
                     </div>
@@ -191,21 +191,21 @@ const DashboardPage = () => {
                 </div>
 
                 <div className="stats-grid">
-                    <div className="stat-card">
+                    <div className="stat-card stat-card--total">
                         <div className="stat-value">{animatedTotal}</div>
                         <div className="stat-label">Total Sessions</div>
                     </div>
-                    <div className="stat-card">
+                    <div className="stat-card stat-card--active">
                         <div className="stat-value" style={{color: 'var(--don-success)'}}>{animatedActive}</div>
                         <div className="stat-label">Active Sessions</div>
                     </div>
-                    <div className="stat-card">
+                    <div className="stat-card stat-card--revoked">
                         <div className="stat-value" style={{color: 'var(--don-warning)'}}>{animatedRevoked}</div>
                         <div className="stat-label">Revoked Sessions</div>
                     </div>
                 </div>
 
-                <div id="sessions-section" className="card">
+                <div id="sessions-section" className="card dashboard-card dashboard-card--sessions">
                     <div className="card-header">
                         <h2 className="card-title">Session Management</h2>
                         <div className="flex flex-wrap gap-3">
@@ -241,7 +241,10 @@ const DashboardPage = () => {
                                 {sessions.map((session) => {
                                     const isCurrentDevice = session.device_id === currentDeviceId;
                                     return (
-                                        <tr key={session.session_id}>
+                                        <tr
+                                            key={session.session_id}
+                                            className={`session-row ${session.revoked ? 'session-row--revoked' : 'session-row--active'} ${isCurrentDevice ? 'session-row--current' : ''}`}
+                                        >
                                             <td className="cell-mono">
                                                 {session.device_id}
                                                 {isCurrentDevice && <span className="badge-accent ml-2">current</span>}
