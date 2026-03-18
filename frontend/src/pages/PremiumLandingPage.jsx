@@ -1,6 +1,5 @@
 import {useMemo, useState} from 'react';
 import {Link} from 'react-router-dom';
-// eslint-disable-next-line no-unused-vars
 import {motion} from 'framer-motion';
 import {AlertCircle, CheckCircle, ChevronRight, Eye, Lock, Shield, Smartphone, Zap} from 'react-feather';
 
@@ -114,50 +113,94 @@ const USE_CASES = [
     'Developer-friendly session APIs',
 ];
 
+// ═════════════════════════════════════════════════════════════════════════════
+// HERO SECTION
+// ═════════════════════════════════════════════════════════════════════════════
+
 function HeroSection() {
     return (
         <section className="relative overflow-hidden py-20 md:py-28 lg:py-32 bg-white dark:bg-[#020617]">
-            {/* Light mode background */}
+            {/* Light mode background - subtle gradient */}
             <div
                 className="pointer-events-none absolute inset-0 dark:hidden"
                 style={{
-                    background: 'radial-gradient(circle at 20% 20%, rgba(139,92,246,0.08), transparent 40%), radial-gradient(circle at 80% 30%, rgba(99,102,241,0.06), transparent 40%)',
+                    background: 'radial-gradient(circle at 20% 20%, rgba(139,92,246,0.06), transparent 40%), radial-gradient(circle at 80% 30%, rgba(99,102,241,0.04), transparent 40%)',
                 }}
             />
-            {/* Dark mode background */}
+
+            {/* Dark mode background - subtle layered gradients */}
             <div
                 className="pointer-events-none absolute inset-0 hidden dark:block"
                 style={{
-                    background: 'linear-gradient(135deg, #020617 0%, #1a1632 50%, #0f1a2e 100%)',
+                    background: 'radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.08), transparent 40%), radial-gradient(circle at 80% 30%, rgba(99, 102, 241, 0.06), transparent 40%), #020617',
                 }}
             />
-            <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-                <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-8">
-                    <motion.span variants={itemVariants}
-                                 className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 dark:border-violet-500/30 dark:bg-violet-500/15 dark:text-violet-300">
+
+            {/* Floating gradient shapes - light mode */}
+            <div className="pointer-events-none absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-br from-violet-200 to-transparent blur-3xl opacity-20 dark:hidden" />
+            <div className="pointer-events-none absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-indigo-200 to-transparent blur-3xl opacity-15 dark:hidden" />
+
+            {/* Floating gradient shapes - dark mode */}
+            <div className="pointer-events-none absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-br from-violet-500 to-transparent blur-3xl opacity-5 hidden dark:block" />
+            <div className="pointer-events-none absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-tr from-purple-500 to-transparent blur-3xl opacity-5 hidden dark:block" />
+
+            <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <motion.div variants={containerVariants} initial="hidden" animate="visible" className="text-center space-y-8">
+                    <motion.span
+                        variants={itemVariants}
+                        className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 dark:border-violet-500/30 dark:bg-violet-500/15 dark:text-violet-300"
+                    >
                         Authentication Platform
                     </motion.span>
-                    <motion.h1 variants={itemVariants}
-                               className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-                        Control Sessions.<br/>Not Just Logins.
+
+                    <motion.h1
+                        variants={itemVariants}
+                        className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 dark:text-slate-100 leading-tight"
+                    >
+                        Control Sessions.
+                        <br />
+                        Not Just Logins.
                     </motion.h1>
-                    <motion.p variants={itemVariants}
-                              className="mx-auto max-w-3xl text-base md:text-xl text-slate-600 dark:text-slate-300">
+
+                    <motion.p
+                        variants={itemVariants}
+                        className="mx-auto max-w-3xl text-base md:text-lg text-slate-600 dark:text-slate-300"
+                    >
                         Short-lived tokens, refresh rotation, and full session visibility for modern systems.
                     </motion.p>
-                    <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-center gap-3">
+
+                    <motion.div variants={itemVariants} className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 pt-4">
                         <Link
                             to="/sessions"
-                            className="rounded-lg bg-violet-600 px-7 py-3 font-medium text-white transition hover:bg-violet-500"
+                            className="rounded-lg bg-violet-600 px-6 sm:px-8 py-3 font-medium text-white transition hover:bg-violet-500 hover:shadow-lg hover:shadow-violet-500/20 dark:hover:shadow-violet-500/10"
                         >
                             Explore Sessions
                         </Link>
                         <Link
                             to="/architecture"
-                            className="rounded-lg border border-slate-300 px-7 py-3 font-medium text-slate-900 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                            className="rounded-lg border border-slate-300 px-6 sm:px-8 py-3 font-medium text-slate-900 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
                         >
-                            View Flow <ChevronRight className="ml-1 inline h-4 w-4"/>
+                            View Flow <ChevronRight className="ml-1 inline h-4 w-4" />
                         </Link>
+                    </motion.div>
+
+                    {/* Trust badges */}
+                    <motion.div
+                        variants={itemVariants}
+                        className="pt-6 flex flex-wrap items-center justify-center gap-6 border-t border-slate-200 dark:border-slate-800 mt-10"
+                    >
+                        <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                            <span className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">JWT Tokens</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                            <span className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">Spring Boot</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                            <span className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">Real-time Tracking</span>
+                        </div>
                     </motion.div>
                 </motion.div>
             </div>
@@ -165,42 +208,53 @@ function HeroSection() {
     );
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// TRUST / PROOF SECTION
+// ═════════════════════════════════════════════════════════════════════════════
+
 function TrustSection() {
     return (
         <section className="bg-slate-50 py-20 md:py-28 lg:py-32 dark:bg-slate-950/40">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{once: true}}
-                            className="mb-14 text-center">
-                    <motion.h2 variants={itemVariants}
-                               className="mb-4 text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100">
-                        Built for real-world security
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{once: true}}
+                    className="mb-14 text-center"
+                >
+                    <motion.h2
+                        variants={itemVariants}
+                        className="text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100"
+                    >
+                        Built for Real-World Security
                     </motion.h2>
                 </motion.div>
-                <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{once: true}}
-                            className="grid grid-cols-1 gap-6 md:grid-cols-3">
+
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{once: true}}
+                    className="grid grid-cols-1 gap-6 md:grid-cols-3"
+                >
                     {[
-                        {icon: Zap, title: 'Short-lived tokens', text: 'Short lifetimes reduce exposure windows.'},
-                        {
-                            icon: Lock,
-                            title: 'Session-level control',
-                            text: 'Track and revoke device sessions instantly.'
-                        },
-                        {
-                            icon: AlertCircle,
-                            title: 'Immediate revocation',
-                            text: 'Respond to suspicious activity in milliseconds.'
-                        },
+                        {icon: Zap, title: 'Short-lived Tokens', text: 'Reduce risk exposure by limiting token lifetime.'},
+                        {icon: Lock, title: 'Session Control', text: 'Track and revoke device sessions instantly.'},
+                        {icon: AlertCircle, title: 'Instant Revocation', text: 'Respond to threats in milliseconds.'},
                     ].map((card) => {
                         const Icon = card.icon;
                         return (
-                            <motion.div key={card.title} variants={itemVariants}
-                                        className="rounded-2xl border border-slate-200 bg-white p-7 dark:border-slate-800 dark:bg-slate-900">
-                                <div
-                                    className="mb-4 inline-flex rounded-lg bg-violet-100 p-2 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
-                                    <Icon className="h-5 w-5"/>
+                            <motion.div
+                                key={card.title}
+                                variants={itemVariants}
+                                className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 dark:border-slate-800 dark:bg-slate-900/60 backdrop-blur-sm transition hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-slate-800/50"
+                            >
+                                <div className="mb-4 inline-flex rounded-lg bg-violet-100 p-3 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
+                                    <Icon className="h-6 w-6" />
                                 </div>
-                                <h3 className="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{card.title}</h3>
-                                <p className="text-slate-600 dark:text-slate-300">{card.text}</p>
+                                <h3 className="mb-3 text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">{card.title}</h3>
+                                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">{card.text}</p>
                             </motion.div>
                         );
                     })}
@@ -210,34 +264,55 @@ function TrustSection() {
     );
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// HOW IT WORKS SECTION
+// ═════════════════════════════════════════════════════════════════════════════
+
 function HowItWorksSection({activeStep, onStepChange}) {
     const activeStepData = useMemo(() => STEPS.find((step) => step.id === activeStep) ?? STEPS[0], [activeStep]);
 
     return (
-        <section className="py-20 md:py-28 lg:py-32">
+        <section className="py-20 md:py-28 lg:py-32 bg-white dark:bg-[#020617]">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{once: true}}
-                            className="mb-12">
-                    <motion.h2 variants={itemVariants}
-                               className="mb-3 text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100">
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{once: true}}
+                    className="mb-12"
+                >
+                    <motion.h2
+                        variants={itemVariants}
+                        className="text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100"
+                    >
                         How It Works
                     </motion.h2>
-                    <motion.p variants={itemVariants} className="text-slate-600 dark:text-slate-300">
-                        Click each step to inspect the flow.
+                    <motion.p variants={itemVariants} className="mt-4 text-slate-600 dark:text-slate-300">
+                        Click each step to explore the authentication flow in detail.
                     </motion.p>
                 </motion.div>
 
-                <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{once: true}}
-                            className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-5">
+                {/* Step buttons */}
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{once: true}}
+                    className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-5"
+                >
                     {STEPS.map((step, index) => (
                         <motion.button
                             key={step.id}
                             type="button"
                             variants={itemVariants}
                             onClick={() => onStepChange(step.id)}
-                            className={`rounded-xl border p-4 text-left transition ${activeStep === step.id
-                                ? 'border-violet-400 bg-violet-50 dark:border-violet-500/40 dark:bg-violet-500/10'
-                                : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700'}`}
+                            whileHover={{scale: 1.02}}
+                            whileTap={{scale: 0.98}}
+                            className={`rounded-xl border p-4 text-left transition ${
+                                activeStep === step.id
+                                    ? 'border-violet-400 bg-violet-50 dark:border-violet-500/40 dark:bg-violet-500/10'
+                                    : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700'
+                            }`}
                         >
                             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Step {index + 1}</p>
                             <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">{step.title}</p>
@@ -246,22 +321,33 @@ function HowItWorksSection({activeStep, onStepChange}) {
                     ))}
                 </motion.div>
 
-                <motion.div key={activeStep} initial={{opacity: 0, y: 8}} animate={{opacity: 1, y: 0}}
-                            transition={{duration: 0.2}}
-                            className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-transparent p-7 dark:border-violet-500/30 dark:from-violet-500/10">
-                    <h3 className="mb-3 text-2xl font-bold text-slate-900 dark:text-slate-100">{activeStepData.title}</h3>
-                    <p className="mb-5 text-slate-700 dark:text-slate-300">{activeStepData.details}</p>
-                    <div className="flex flex-wrap gap-3">
-                        <Link to="/features"
-                              className="rounded-lg bg-violet-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-violet-500">
+                {/* Step details */}
+                <motion.div
+                    key={activeStep}
+                    initial={{opacity: 0, y: 8}}
+                    animate={{opacity: 1, y: 0}}
+                    transition={{duration: 0.2}}
+                    className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-transparent p-6 sm:p-8 dark:border-violet-500/30 dark:from-violet-500/10 dark:to-transparent"
+                >
+                    <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">{activeStepData.title}</h3>
+                    <p className="text-slate-700 dark:text-slate-300 mb-6">{activeStepData.details}</p>
+                    <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+                        <Link
+                            to="/features"
+                            className="rounded-lg bg-violet-600 px-4 sm:px-5 py-2 text-sm font-medium text-white transition hover:bg-violet-500"
+                        >
                             Learn more
                         </Link>
-                        <Link to="/identifier-flow"
-                              className="rounded-lg border border-slate-300 px-5 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">
+                        <Link
+                            to="/identifier-flow"
+                            className="rounded-lg border border-slate-300 px-4 sm:px-5 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                        >
                             View flow
                         </Link>
-                        <Link to="/sessions"
-                              className="rounded-lg border border-slate-300 px-5 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800">
+                        <Link
+                            to="/sessions"
+                            className="rounded-lg border border-slate-300 px-4 sm:px-5 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                        >
                             Explore sessions
                         </Link>
                     </div>
@@ -271,30 +357,52 @@ function HowItWorksSection({activeStep, onStepChange}) {
     );
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// FEATURES GRID SECTION
+// ═════════════════════════════════════════════════════════════════════════════
+
 function FeatureSection() {
     return (
         <section className="bg-slate-50 py-20 md:py-28 lg:py-32 dark:bg-slate-950/40">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <motion.h2 variants={itemVariants} initial="hidden" whileInView="visible" viewport={{once: true}}
-                           className="mb-12 text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100">
-                    Core Features
-                </motion.h2>
-                <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{once: true}}
-                            className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <motion.div
+                    variants={itemVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{once: true}}
+                    className="mb-14"
+                >
+                    <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100">
+                        Core Features
+                    </h2>
+                </motion.div>
+
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{once: true}}
+                    className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+                >
                     {FEATURES.map((feature) => {
                         const Icon = feature.icon;
                         return (
-                            <motion.div key={feature.title} variants={itemVariants} whileHover={{y: -4}}
-                                        className="rounded-2xl border border-slate-200 bg-white p-7 transition hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
-                                <div
-                                    className="mb-4 inline-flex rounded-lg bg-violet-100 p-2 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
-                                    <Icon className="h-5 w-5"/>
+                            <motion.div
+                                key={feature.title}
+                                variants={itemVariants}
+                                whileHover={{y: -4}}
+                                className="group rounded-xl border border-slate-200 bg-white p-6 sm:p-8 transition hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/60 dark:hover:shadow-lg dark:hover:shadow-violet-500/10"
+                            >
+                                <div className="mb-4 inline-flex rounded-lg bg-violet-100 p-3 text-violet-700 transition group-hover:scale-110 dark:bg-violet-500/20 dark:text-violet-300">
+                                    <Icon className="h-6 w-6" />
                                 </div>
-                                <h3 className="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-100">{feature.title}</h3>
-                                <p className="mb-4 text-slate-600 dark:text-slate-300">{feature.description}</p>
-                                <Link to={feature.to}
-                                      className="inline-flex items-center text-sm font-medium text-violet-700 hover:text-violet-600 dark:text-violet-300 dark:hover:text-violet-200">
-                                    {feature.cta} <ChevronRight className="ml-1 h-4 w-4"/>
+                                <h3 className="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">{feature.title}</h3>
+                                <p className="mb-5 text-sm text-slate-600 dark:text-slate-400">{feature.description}</p>
+                                <Link
+                                    to={feature.to}
+                                    className="inline-flex items-center text-sm font-medium text-violet-700 transition hover:text-violet-600 dark:text-violet-300 dark:hover:text-violet-200"
+                                >
+                                    {feature.cta} <ChevronRight className="ml-1 h-4 w-4" />
                                 </Link>
                             </motion.div>
                         );
@@ -305,34 +413,54 @@ function FeatureSection() {
     );
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// COMPARISON SECTION
+// ═════════════════════════════════════════════════════════════════════════════
+
 function ComparisonSection() {
     return (
-        <section className="py-20 md:py-28 lg:py-32">
+        <section className="py-20 md:py-28 lg:py-32 bg-white dark:bg-[#020617]">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <h2 className="mb-12 text-center text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100">
-                    Why traditional auth fails
+                <h2 className="mb-14 text-center text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100">
+                    Why Traditional Auth Fails
                 </h2>
+
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12">
-                    <motion.div variants={slideInLeft} initial="hidden" whileInView="visible" viewport={{once: true}}
-                                className="rounded-2xl border border-red-200 bg-red-50/60 p-7 dark:border-red-500/30 dark:bg-red-500/10">
-                        <h3 className="mb-4 text-2xl font-bold text-slate-900 dark:text-slate-100">Common risks</h3>
+                    {/* Left column - Risks */}
+                    <motion.div
+                        variants={slideInLeft}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{once: true}}
+                        className="rounded-xl border border-red-200 bg-gradient-to-br from-red-50 to-transparent p-6 sm:p-8 dark:border-red-500/30 dark:from-red-500/10 dark:to-transparent"
+                    >
+                        <h3 className="mb-6 text-2xl font-bold text-slate-900 dark:text-slate-100">Common Risks</h3>
                         {['Long-lived tokens', 'No session tracking', 'Weak revocation', 'Replay exposure'].map((item) => (
-                            <p key={item} className="mb-2 text-slate-700 dark:text-slate-300">- {item}</p>
+                            <div key={item} className="mb-3 flex items-start gap-3">
+                                <AlertCircle className="mt-1 h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400" />
+                                <p className="text-slate-700 dark:text-slate-300">{item}</p>
+                            </div>
                         ))}
                     </motion.div>
-                    <motion.div variants={slideInRight} initial="hidden" whileInView="visible" viewport={{once: true}}
-                                className="rounded-2xl border border-green-200 bg-green-50/60 p-7 dark:border-green-500/30 dark:bg-green-500/10">
-                        <h3 className="mb-4 text-2xl font-bold text-slate-900 dark:text-slate-100">Improved
-                            solution</h3>
+
+                    {/* Right column - Solution */}
+                    <motion.div
+                        variants={slideInRight}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{once: true}}
+                        className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-transparent p-6 sm:p-8 dark:border-emerald-500/30 dark:from-emerald-500/10 dark:to-transparent"
+                    >
+                        <h3 className="mb-6 text-2xl font-bold text-slate-900 dark:text-slate-100">Improved Solution</h3>
                         {[
                             {text: 'Short-lived tokens'},
                             {text: 'Rotation-based refresh'},
                             {text: 'Full session control'},
                             {text: 'Instant revocation'},
                         ].map((item) => (
-                            <div key={item.text}
-                                 className="mb-2 flex items-center gap-2 text-slate-700 dark:text-slate-300">
-                                <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-300"/> {item.text}
+                            <div key={item.text} className="mb-3 flex items-center gap-3">
+                                <CheckCircle className="h-5 w-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                <p className="text-slate-700 dark:text-slate-300">{item.text}</p>
                             </div>
                         ))}
                     </motion.div>
@@ -342,61 +470,99 @@ function ComparisonSection() {
     );
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// USE CASES SECTION
+// ═════════════════════════════════════════════════════════════════════════════
+
 function UseCasesSection() {
     return (
         <section className="bg-slate-50 py-20 md:py-28 lg:py-32 dark:bg-slate-950/40">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <h2 className="mb-10 text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100">Use
-                    Cases</h2>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <h2 className="mb-14 text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100">
+                    Use Cases
+                </h2>
+
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{once: true}}
+                    className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+                >
                     {USE_CASES.map((useCase) => (
-                        <div key={useCase}
-                             className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+                        <motion.div
+                            key={useCase}
+                            variants={itemVariants}
+                            whileHover={{y: -2}}
+                            className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900/60"
+                        >
                             <p className="font-medium text-slate-800 dark:text-slate-200">{useCase}</p>
-                        </div>
+                        </motion.div>
                     ))}
+                </motion.div>
+            </div>
+        </section>
+    );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// FINAL CTA SECTION
+// ═════════════════════════════════════════════════════════════════════════════
+
+function FinalCtaSection() {
+    return (
+        <section className="relative overflow-hidden py-20 md:py-28 lg:py-32">
+            {/* Light mode background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-violet-700 dark:hidden" />
+
+            {/* Dark mode background */}
+            <div className="absolute inset-0 hidden dark:block bg-gradient-to-br from-violet-600/20 via-purple-600/20 to-indigo-600/20" />
+
+            {/* Overlay for dark mode */}
+            <div className="absolute inset-0 hidden dark:block bg-[#020617]" />
+
+            <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+                <h2 className="mb-4 text-4xl md:text-5xl lg:text-6xl font-bold text-white dark:text-slate-100">
+                    Start Building Secure Systems
+                </h2>
+                <p className="mx-auto mb-8 max-w-2xl text-violet-100 dark:text-slate-300">
+                    Session control, token rotation, and real-time visibility in one comprehensive flow.
+                </p>
+                <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4">
+                    <Link
+                        to="/sessions"
+                        className="rounded-lg bg-white px-6 sm:px-8 py-3 font-medium text-violet-700 transition hover:bg-slate-100 dark:bg-slate-900 dark:text-violet-300 dark:hover:bg-slate-800"
+                    >
+                        Get Started
+                    </Link>
+                    <Link
+                        to="/features"
+                        className="rounded-lg border border-white px-6 sm:px-8 py-3 font-medium text-white transition hover:bg-white/10 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                    >
+                        Explore Docs <ChevronRight className="ml-1 inline h-4 w-4" />
+                    </Link>
                 </div>
             </div>
         </section>
     );
 }
 
-function FinalCtaSection() {
-    return (
-        <section className="relative overflow-hidden py-20 md:py-28 lg:py-32">
-            <div className="absolute inset-0 bg-gradient-to-b from-violet-600 to-violet-700"/>
-            <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-                <h2 className="mb-4 text-4xl md:text-5xl lg:text-6xl font-bold text-white">Start building secure
-                    systems</h2>
-                <p className="mx-auto mb-8 max-w-2xl text-violet-100">Session control, token rotation, and real-time
-                    visibility in one flow.</p>
-                <div className="flex flex-wrap justify-center gap-3">
-                    <Link to="/sessions"
-                          className="rounded-lg bg-white px-7 py-3 font-medium text-violet-700 transition hover:bg-slate-100">
-                        Get Started
-                    </Link>
-                    <Link to="/features"
-                          className="rounded-lg border border-white px-7 py-3 font-medium text-white transition hover:bg-white/10">
-                        Explore Docs <ChevronRight className="ml-1 inline h-4 w-4"/>
-                    </Link>
-                </div>
-            </div>
-        </section>
-    );
-}
+// ═════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═════════════════════════════════════════════════════════════════════════════
 
 export default function PremiumLandingPage() {
     const [activeStep, setActiveStep] = useState('login');
 
     return (
         <div className="min-h-screen bg-white text-slate-900 dark:bg-[#020617] dark:text-slate-100">
-            <HeroSection/>
-            <TrustSection/>
-            <HowItWorksSection activeStep={activeStep} onStepChange={setActiveStep}/>
-            <FeatureSection/>
-            <ComparisonSection/>
-            <UseCasesSection/>
-            <FinalCtaSection/>
+            <HeroSection />
+            <TrustSection />
+            <HowItWorksSection activeStep={activeStep} onStepChange={setActiveStep} />
+            <FeatureSection />
+            <ComparisonSection />
+            <UseCasesSection />
+            <FinalCtaSection />
         </div>
     );
 }
