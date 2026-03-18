@@ -106,12 +106,20 @@ const FEATURES = [
 ];
 
 const USE_CASES = [
-    'Enterprise security posture',
-    'Multi-device session control',
-    'Real-time suspicious session response',
-    'Compliance and audit visibility',
-    'Fast incident response',
-    'Developer-friendly session APIs',
+    {icon: Shield, title: 'Enterprise Security', description: 'Control sessions across devices, locations, and teams.'},
+    {
+        icon: Smartphone,
+        title: 'Multi-device Control',
+        description: 'Manage and monitor every connected device independently.'
+    },
+    {
+        icon: AlertCircle,
+        title: 'Threat Response',
+        description: 'Instantly revoke access to respond to security incidents.'
+    },
+    {icon: Eye, title: 'Real-time Visibility', description: 'See exactly who has access and where they are.'},
+    {icon: Lock, title: 'Compliance Ready', description: 'Meet regulatory requirements with full audit trails.'},
+    {icon: Zap, title: 'Developer Friendly', description: 'Simple APIs and SDKs for seamless integration.'},
 ];
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -209,6 +217,29 @@ function HeroSection() {
                             <div className="h-2 w-2 rounded-full bg-emerald-500" />
                             <span className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">Real-time Tracking</span>
                         </div>
+                    </motion.div>
+
+                    {/* External links */}
+                    <motion.div
+                        variants={itemVariants}
+                        className="mt-8 flex justify-center gap-6 text-sm text-slate-500 dark:text-slate-400"
+                    >
+                        <a
+                            href="https://github.com/Vinay2080/dragon-of-north"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="transition-colors duration-300 hover:text-slate-900 dark:hover:text-white"
+                        >
+                            GitHub →
+                        </a>
+                        <a
+                            href="http://localhost:8080/swagger-ui/index.html"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="transition-colors duration-300 hover:text-slate-900 dark:hover:text-white"
+                        >
+                            API Docs →
+                        </a>
                     </motion.div>
                 </motion.div>
             </div>
@@ -515,11 +546,22 @@ function ComparisonSection() {
 
 function UseCasesSection() {
     return (
-        <section className="bg-slate-50 py-20 md:py-28 lg:py-32 dark:bg-slate-950/40">
+        <section className="py-20 md:py-28 lg:py-32 bg-white dark:bg-[#020617]">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <h2 className="mb-14 text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100">
-                    Use Cases
-                </h2>
+                <motion.div
+                    variants={itemVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{once: true}}
+                    className="mb-14"
+                >
+                    <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100">
+                        Built for Real-World Use
+                    </h2>
+                    <p className="mt-4 max-w-3xl text-lg text-slate-600 dark:text-slate-300">
+                        From startups to enterprises, Dragon of North powers modern authentication at scale.
+                    </p>
+                </motion.div>
 
                 <motion.div
                     variants={containerVariants}
@@ -528,19 +570,33 @@ function UseCasesSection() {
                     viewport={{once: true}}
                     className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
                 >
-                    {USE_CASES.map((useCase) => (
-                        <motion.div
-                            key={useCase}
-                            variants={itemVariants}
-                            whileHover={{y: -2}}
-                            className="group relative rounded-xl border border-slate-200 bg-white p-6 sm:p-8 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/60 dark:hover:shadow-md dark:hover:shadow-violet-500/10"
-                        >
-                            {/* Subtle background shift */}
-                            <div
-                                className="absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-b from-violet-500/5 to-transparent"/>
-                            <p className="relative z-10 font-medium text-slate-800 transition-colors duration-300 dark:text-slate-200 group-hover:text-violet-700 dark:group-hover:text-violet-300">{useCase}</p>
-                        </motion.div>
-                    ))}
+                    {USE_CASES.map((useCase) => {
+                        const Icon = useCase.icon;
+                        return (
+                            <motion.div
+                                key={useCase.title}
+                                variants={itemVariants}
+                                className="group relative rounded-xl border border-slate-200 bg-white p-6 sm:p-8 transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/60 dark:hover:shadow-lg dark:hover:shadow-violet-500/10"
+                            >
+                                {/* Gradient hover glow */}
+                                <div
+                                    className="absolute inset-0 rounded-xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br from-violet-500/10 to-indigo-500/10 blur-sm"/>
+
+                                <div className="relative z-10">
+                                    <div
+                                        className="mb-4 inline-flex rounded-lg bg-violet-100 p-3 text-violet-700 transition-all duration-300 dark:bg-violet-500/20 dark:text-violet-300 group-hover:scale-110 group-hover:rotate-3">
+                                        <Icon className="h-6 w-6"/>
+                                    </div>
+                                    <h3 className="mb-2 text-lg font-semibold text-slate-900 transition-colors duration-300 dark:text-slate-100 group-hover:text-violet-700 dark:group-hover:text-violet-300">
+                                        {useCase.title}
+                                    </h3>
+                                    <p className="text-sm text-slate-600 transition-colors duration-300 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300">
+                                        {useCase.description}
+                                    </p>
+                                </div>
+                            </motion.div>
+                        );
+                    })}
                 </motion.div>
             </div>
         </section>
@@ -602,13 +658,14 @@ function FinalCtaSection() {
 
 function ProductDemoSection() {
     const mockSessions = [
-        {device: 'MacBook Pro', location: 'San Francisco, CA', status: 'active', time: '2 minutes ago'},
-        {device: 'iPhone 15', location: 'San Francisco, CA', status: 'active', time: '1 hour ago'},
-        {device: 'Windows Desktop', location: 'New York, NY', status: 'inactive', time: '3 days ago'},
+        {device: 'MacBook Pro', location: 'San Francisco, CA', status: 'active'},
+        {device: 'iPhone 15', location: 'Mumbai, India', status: 'active'},
+        {device: 'Windows Desktop', location: 'New York, NY', status: 'inactive'},
     ];
 
     return (
-        <section className="py-20 md:py-28 lg:py-32 bg-slate-50 dark:bg-slate-950/40">
+        <section
+            className="py-20 md:py-28 lg:py-32 bg-gradient-to-b from-white to-slate-50 dark:from-[#020617] dark:to-slate-950/40">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 items-center">
                     {/* Left side - Text */}
@@ -620,16 +677,17 @@ function ProductDemoSection() {
                         className="space-y-6"
                     >
                         <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-slate-100">
-                            Real-time Session Visibility
+                            See Session Control in Action
                         </h2>
                         <p className="text-lg text-slate-600 dark:text-slate-300">
-                            Monitor every active session across all devices in real-time. See who's logged in, where
-                            they're accessing from, and revoke access instantly.
+                            Track devices in real-time, monitor activity across locations, and revoke access instantly.
+                            Full control at your fingertips.
                         </p>
-                        <ul className="space-y-4">
-                            {['Device identification', 'Geographic tracking', 'Activity monitoring', 'Instant revocation'].map((item) => (
+                        <ul className="space-y-3">
+                            {['Real-time tracking', 'Device-level control', 'Instant revocation'].map((item) => (
                                 <li key={item} className="flex items-center gap-3">
-                                    <div className="h-2 w-2 rounded-full bg-violet-600 dark:bg-violet-400"/>
+                                    <div
+                                        className="h-2 w-2 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-violet-400 dark:to-indigo-400"/>
                                     <span className="text-slate-700 dark:text-slate-300">{item}</span>
                                 </li>
                             ))}
@@ -654,36 +712,67 @@ function ProductDemoSection() {
                         </div>
                     </motion.div>
 
-                    {/* Right side - Mock session table */}
+                    {/* Right side - Mock session table with glassmorphism */}
                     <motion.div
                         initial={{opacity: 0, x: 30}}
                         whileInView={{opacity: 1, x: 0}}
                         viewport={{once: true}}
                         transition={{duration: 0.5}}
-                        className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900/60"
+                        className="rounded-xl border border-slate-200 bg-white/80 p-6 sm:p-8 shadow-sm dark:border-white/10 dark:bg-slate-800/40 dark:backdrop-blur-md dark:shadow-xl dark:shadow-slate-900/20"
                     >
-                        <div className="mb-4">
+                        <div className="mb-6">
                             <h3 className="font-semibold text-slate-900 dark:text-slate-100">Active Sessions</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">3 devices</p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{mockSessions.filter(s => s.status === 'active').length} active
+                                • {mockSessions.length} total</p>
                         </div>
                         <div className="space-y-3">
                             {mockSessions.map((session, idx) => (
                                 <motion.div
                                     key={idx}
-                                    whileHover={{scale: 1.02}}
-                                    className="group flex items-center justify-between rounded-lg border border-slate-200 p-4 transition-all duration-300 ease-out dark:border-slate-700 dark:bg-slate-800/50 hover:border-violet-300 hover:bg-violet-50/50 hover:shadow-md dark:hover:border-violet-500/30 dark:hover:bg-violet-500/10 cursor-pointer"
+                                    className={`group flex items-center justify-between rounded-lg p-4 transition-all duration-300 ease-out ${
+                                        session.status === 'active'
+                                            ? 'border border-slate-200 dark:border-white/5 hover:border-violet-300 hover:bg-violet-50/50 dark:hover:border-violet-500/30 dark:hover:bg-violet-500/10 cursor-pointer'
+                                            : 'border border-slate-200 dark:border-white/5 opacity-60'
+                                    }`}
+                                    whileHover={{scale: session.status === 'active' ? 1.02 : 1}}
                                 >
                                     <div className="flex-1">
-                                        <p className="font-medium text-slate-900 transition-colors duration-300 dark:text-slate-100 group-hover:text-violet-700 dark:group-hover:text-violet-300">{session.device}</p>
-                                        <p className="text-xs text-slate-500 transition-colors duration-300 dark:text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300">{session.location}</p>
+                                        <p className="font-medium text-slate-900 transition-colors duration-300 dark:text-slate-100 group-hover:text-violet-700 dark:group-hover:text-violet-300">
+                                            {session.device}
+                                        </p>
+                                        <p className="text-xs text-slate-500 transition-colors duration-300 dark:text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300">
+                                            {session.location}
+                                        </p>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <div
-                                            className={`h-2 w-2 rounded-full transition-transform duration-300 group-hover:scale-150 ${session.status === 'active' ? 'bg-emerald-500' : 'bg-slate-300'}`}/>
-                                        <span
-                                            className={`text-xs font-medium transition-all duration-300 ${session.status === 'active' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'}`}>
-                                            {session.status}
-                                        </span>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`h-2 w-2 rounded-full transition-all duration-300 ${
+                                                session.status === 'active'
+                                                    ? 'bg-emerald-400 group-hover:scale-150'
+                                                    : 'bg-slate-400'
+                                            }`}/>
+                                            <span className={`text-xs font-medium ${
+                                                session.status === 'active'
+                                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                                    : 'text-slate-500 dark:text-slate-500'
+                                            }`}>
+                                                {session.status === 'active' ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </div>
+                                        {session.status === 'active' ? (
+                                            <motion.button
+                                                whileHover={{scale: 1.05}}
+                                                whileTap={{scale: 0.95}}
+                                                className="px-3 py-1.5 text-xs font-medium rounded-md bg-rose-500/10 text-rose-400 transition-all duration-300 ease-out hover:bg-rose-500/20 hover:shadow-md hover:shadow-rose-500/10 dark:hover:shadow-rose-500/5 border border-rose-500/20 dark:border-rose-500/30"
+                                            >
+                                                Revoke
+                                            </motion.button>
+                                        ) : (
+                                            <span
+                                                className="px-3 py-1.5 text-xs font-medium rounded-md bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400 cursor-not-allowed">
+                                                Disabled
+                                            </span>
+                                        )}
                                     </div>
                                 </motion.div>
                             ))}
@@ -691,7 +780,7 @@ function ProductDemoSection() {
                         <motion.button
                             whileHover={{scale: 1.02}}
                             whileTap={{scale: 0.98}}
-                            className="mt-4 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 transition-all duration-300 ease-out hover:border-red-300 hover:bg-red-50/50 hover:text-red-600 dark:border-slate-700 dark:text-slate-300 dark:hover:border-red-500/30 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                            className="mt-6 w-full rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-600 transition-all duration-300 ease-out hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:border-rose-500/30 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                         >
                             Revoke All Sessions
                         </motion.button>
@@ -822,93 +911,109 @@ function FeatureSpotlightSection() {
 // ═════════════════════════════════════════════════════════════════════════════
 
 function FooterSection() {
+    const linkClass = "text-sm text-slate-500 transition-all duration-300 ease-out hover:text-white dark:text-slate-400 dark:hover:text-white inline-block";
+    
     return (
-        <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+        <footer className="border-t border-white/10 bg-slate-950 dark:bg-slate-950">
             {/* Gradient line at top */}
             <div className="h-1 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600"/>
 
             <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
-                    {/* Brand */}
-                    <div className="col-span-1">
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Dragon of North</h3>
-                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                            Enterprise authentication with session control.
+                <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
+                    {/* Column 1: Brand & Description */}
+                    <div>
+                        <h3 className="text-lg font-bold text-white mb-3">Dragon of North</h3>
+                        <p className="text-sm text-slate-400">
+                            Enterprise-grade authentication with session control, token rotation, and real-time
+                            visibility. Built for modern, secure systems.
                         </p>
+                        <p className="text-xs text-slate-500 mt-4">© 2026 Built by Vinay</p>
                     </div>
 
-                    {/* Product */}
+                    {/* Column 2: Product Navigation */}
                     <div>
-                        <h4 className="font-semibold text-slate-900 dark:text-slate-100">Product</h4>
-                        <ul className="mt-4 space-y-3">
-                            <li><Link to="/features"
-                                      className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:translate-x-1 dark:text-slate-400 dark:hover:text-violet-300 inline-block">Features</Link>
+                        <h4 className="font-semibold text-white mb-4">Product</h4>
+                        <ul className="space-y-3">
+                            <li>
+                                <Link to="/sessions" className={linkClass}>
+                                    Sessions
+                                </Link>
                             </li>
-                            <li><Link to="/architecture"
-                                      className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:translate-x-1 dark:text-slate-400 dark:hover:text-violet-300 inline-block">Architecture</Link>
+                            <li>
+                                <a href="#how-it-works" className={linkClass}>
+                                    How it Works
+                                </a>
                             </li>
-                            <li><Link to="/security-demo"
-                                      className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:translate-x-1 dark:text-slate-400 dark:hover:text-violet-300 inline-block">Security</Link>
+                            <li>
+                                <a href="http://localhost:8080/swagger-ui/index.html" target="_blank"
+                                   rel="noopener noreferrer" className={linkClass}>
+                                    API Docs
+                                </a>
                             </li>
-                            <li><Link to="/identifier-flow"
-                                      className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:translate-x-1 dark:text-slate-400 dark:hover:text-violet-300 inline-block">Flow</Link>
+                            <li>
+                                <Link to="/features" className={linkClass}>
+                                    Features
+                                </Link>
                             </li>
                         </ul>
                     </div>
 
-                    {/* Developers */}
+                    {/* Column 3: Developer Identity */}
                     <div>
-                        <h4 className="font-semibold text-slate-900 dark:text-slate-100">Developers</h4>
-                        <ul className="mt-4 space-y-3">
-                            <li><Link to="/features"
-                                      className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:translate-x-1 dark:text-slate-400 dark:hover:text-violet-300 inline-block">Docs</Link>
+                        <h4 className="font-semibold text-white mb-4">Developer</h4>
+                        <ul className="space-y-3">
+                            <li>
+                                <a href="https://github.com/Vinay2080/dragon-of-north" target="_blank"
+                                   rel="noopener noreferrer" className={linkClass}>
+                                    GitHub
+                                </a>
                             </li>
-                            <li><a href="https://github.com"
-                                   className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:translate-x-1 dark:text-slate-400 dark:hover:text-violet-300 inline-block">GitHub</a>
+                            <li>
+                                <a href="https://www.linkedin.com/in/vinay-patil-502b7b341/" target="_blank"
+                                   rel="noopener noreferrer" className={linkClass}>
+                                    LinkedIn
+                                </a>
                             </li>
-                            <li><Link to="/deployment"
-                                      className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:translate-x-1 dark:text-slate-400 dark:hover:text-violet-300 inline-block">API</Link>
+                            <li>
+                                <a href="https://x.com/Vinay_desu" target="_blank" rel="noopener noreferrer"
+                                   className={linkClass}>
+                                    X (Twitter)
+                                </a>
                             </li>
-                            <li><Link to="/privacy"
-                                      className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:translate-x-1 dark:text-slate-400 dark:hover:text-violet-300 inline-block">SDK</Link>
+                            <li>
+                                <a href="mailto:shaking.121@gmail.com" className={linkClass}>
+                                    Email
+                                </a>
                             </li>
-                        </ul>
-                    </div>
-
-                    {/* Legal */}
-                    <div>
-                        <h4 className="font-semibold text-slate-900 dark:text-slate-100">Legal</h4>
-                        <ul className="mt-4 space-y-3">
-                            <li><Link to="/privacy"
-                                      className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:translate-x-1 dark:text-slate-400 dark:hover:text-violet-300 inline-block">Privacy</Link>
-                            </li>
-                            <li><Link to="/terms"
-                                      className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:translate-x-1 dark:text-slate-400 dark:hover:text-violet-300 inline-block">Terms</Link>
-                            </li>
-                            <li><a href="#"
-                                   className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:translate-x-1 dark:text-slate-400 dark:hover:text-violet-300 inline-block">Status</a>
-                            </li>
-                            <li><a href="#"
-                                   className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:translate-x-1 dark:text-slate-400 dark:hover:text-violet-300 inline-block">Contact</a>
+                            <li>
+                                <a href="https://drive.google.com/file/d/1-pbBh9zKWV55V_qahhffTat-3pNZcQqb/view"
+                                   target="_blank" rel="noopener noreferrer" className={linkClass}>
+                                    Resume
+                                </a>
                             </li>
                         </ul>
                     </div>
                 </div>
 
+                {/* Divider */}
+                <div className="mt-12 border-t border-white/10"/>
+
                 {/* Bottom section */}
-                <div className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-800">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                            © 2026 Dragon of North. All rights reserved.
-                        </p>
-                        <div className="flex gap-6">
-                            <a href="#"
-                               className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:scale-110 dark:text-slate-400 dark:hover:text-violet-300 inline-block">Twitter</a>
-                            <a href="#"
-                               className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:scale-110 dark:text-slate-400 dark:hover:text-violet-300 inline-block">LinkedIn</a>
-                            <a href="#"
-                               className="text-sm text-slate-600 transition-all duration-300 ease-out hover:text-violet-600 hover:scale-110 dark:text-slate-400 dark:hover:text-violet-300 inline-block">GitHub</a>
-                        </div>
+                <div className="mt-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <p className="text-xs text-slate-500">
+                        Built with React, Spring Boot, JWT, and modern authentication patterns.
+                    </p>
+                    <div className="flex gap-6 text-xs text-slate-500">
+                        <Link to="/privacy" className={`${linkClass} text-xs`}>
+                            Privacy
+                        </Link>
+                        <Link to="/terms" className={`${linkClass} text-xs`}>
+                            Terms
+                        </Link>
+                        <a href="http://localhost:8080/swagger-ui/index.html" target="_blank" rel="noopener noreferrer"
+                           className={`${linkClass} text-xs`}>
+                            API Status
+                        </a>
                     </div>
                 </div>
             </div>
