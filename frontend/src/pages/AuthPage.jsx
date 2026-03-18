@@ -9,6 +9,7 @@ import ValidationError from '../components/Validation/ValidationError';
 import GoogleLoginButton from '../components/auth/GoogleLoginButton';
 import AuthCardLayout from '../components/auth/AuthCardLayout';
 import AuthInput from '../components/auth/AuthInput';
+import PasswordInput from '../components/auth/PasswordInput';
 import AuthButton from '../components/auth/AuthButton';
 import AuthDivider from '../components/auth/AuthDivider';
 import {getDeviceId} from '../utils/device';
@@ -298,23 +299,23 @@ const AuthPage = () => {
                 {isPasswordStep && (
                     <form onSubmit={handleLocalLogin} className="auth-section">
                         <label className="auth-label block">Password</label>
-                        <AuthInput
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password"
-                        hasError={Boolean(passwordError)}
-                        required
-                    />
-                    <ValidationError errors={passwordError ? [passwordError] : []}/>
-                    <AuthButton disabled={loading || !password || isGoogleRedirecting}>
-                        {loading ? 'Logging in...' : 'Login with password'}
-                    </AuthButton>
-                    <p className="auth-helper text-right">
-                        <Link to="/forgot-password" className="auth-link">Forgot password?</Link>
-                    </p>
-                </form>
-            )}
+                        <PasswordInput
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter your password"
+                            hasError={Boolean(passwordError)}
+                            required
+                            disabled={loading || isGoogleRedirecting || authState.isLoading}
+                        />
+                        <ValidationError errors={passwordError ? [passwordError] : []}/>
+                        <AuthButton disabled={loading || !password || isGoogleRedirecting}>
+                            {loading ? 'Logging in...' : 'Login with password'}
+                        </AuthButton>
+                        <p className="auth-helper text-right">
+                            <Link to="/forgot-password" className="auth-link">Forgot password?</Link>
+                        </p>
+                    </form>
+                )}
 
             {showGoogle && (
                 <>

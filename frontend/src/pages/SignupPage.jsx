@@ -7,6 +7,7 @@ import {AuthLoadingOverlay, AuthSuccessMessage} from '../components/auth/AuthSta
 import RateLimitInfo from '../components/RateLimitInfo';
 import {useToast} from '../hooks/useToast';
 import ValidationError from '../components/Validation/ValidationError';
+import PasswordValidationChecklist from '../components/auth/PasswordValidationChecklist';
 import AuthFlowProgress from '../components/AuthFlowProgress';
 import GoogleLoginButton from '../components/auth/GoogleLoginButton';
 import AuthCardLayout from '../components/auth/AuthCardLayout';
@@ -41,25 +42,46 @@ const SignupPage = () => {
 
     const isEmailIdentifier = identifierType === 'EMAIL';
 
-    const passwordStrengthHint = useMemo(() => {
-        if (!password) return 'Use at least 8 characters with uppercase, lowercase, number and symbol.';
-        const errors = validatePassword(password);
-        if (errors.length === 0) return 'Strong password ✅';
-        return `Needs: ${errors.join(' ')}`;
-    }, [password]);
+    // Compute password validity state
+    const passwordErrors = useMemo(() => validatePassword(password), [password]);
+    const isPasswordValid = password && passwordErrors.length === 0;
+
+    // Confirm password only validates if password is valid
+    const confirmPasswordErrors = useMemo(() => {
+        if (!isPasswordValid) return [];
+        return confirmPassword && confirmPassword !== password ? ['Passwords do not match'] : [];
+    }, [isPasswordValid, confirmPassword, password]);
+
+    // Button is enabled only when all conditions met
+    const isFormValid = useMemo(() => {
+        return isPasswordValid &&
+            confirmPassword === password &&
+            acceptTerms &&
+            !loading &&
+            !authState.isLoading;
+    }, [isPasswordValid, confirmPassword, password, acceptTerms, loading, authState.isLoading]);
 
     const handlePasswordChange = (value) => {
         setPassword(value);
-        const errors = validatePassword(value);
-        const confirmPasswordErrors = confirmPassword && value !== confirmPassword ? ['Passwords do not match.'] : [];
-        setFieldErrors(prev => ({...prev, password: value ? errors : [], confirmPassword: confirmPasswordErrors}));
+        // Only set errors if user has typed something and password is invalid
+        setFieldErrors(prev => ({
+            ...prev,
+            password: value ? validatePassword(value) : [],
+            // Clear confirm password error if password becomes invalid
+            confirmPassword: []
+        }));
     };
 
     const handleConfirmPasswordChange = (value) => {
         setConfirmPassword(value);
+        // Only validate confirm password if primary password is valid
+        if (!isPasswordValid) {
+            setFieldErrors(prev => ({...prev, confirmPassword: []}));
+            return;
+        }
         setFieldErrors(prev => ({
             ...prev,
-            confirmPassword: value && value !== password ? ['Passwords do not match.'] : [],
+            confirmPassword: value && value !== password ? ['Passwords do not match'] : []
         }));
     };
 
@@ -165,6 +187,7 @@ const SignupPage = () => {
                 ) : (
                     <form onSubmit={handleGetOtp} noValidate>
                         <div className="space-y-4">
+                            {/* Password Input */}
                             <div className="relative">
                                 <AuthInput
                                     type={showPassword ? 'text' : 'password'}
@@ -172,8 +195,8 @@ const SignupPage = () => {
                                     onChange={(e) => handlePasswordChange(e.target.value)}
                                     placeholder="Enter password"
                                     className="pr-12"
-                                    hasError={Boolean(fieldErrors.password?.length)}
-                                    aria-describedby="password-hint password-errors"
+                                    hasError={password && passwordErrors.length > 0}
+                                    aria-describedby="password-errors"
                                     disabled={loading || authState.isLoading}
                                     required
                                 />
@@ -181,14 +204,21 @@ const SignupPage = () => {
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="auth-toggle-visibility"
-                                    disabled={loading || authState.isLoading}
+                                    disabled={loading || authState.isLoading || !password}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
                                     {showPassword ? 'Hide' : 'Show'}
                                 </button>
                             </div>
-                            <p id="password-hint" className="auth-helper">{passwordStrengthHint}</p>
-                            <ValidationError id="password-errors" errors={fieldErrors.password || []}/>
 
+                            {/* Password Validation Checklist - shows only when user types */}
+                            <PasswordValidationChecklist password={password}/>
+
+                            {/* Password Errors (inline) */}
+                            <ValidationError id="password-errors"
+                                             errors={password && passwordErrors.length > 0 ? ['Password does not meet requirements'] : []}/>
+
+                            {/* Confirm Password Input - only active after password is valid */}
                             <div className="relative">
                                 <AuthInput
                                     type={showConfirmPassword ? 'text' : 'password'}
@@ -196,22 +226,24 @@ const SignupPage = () => {
                                     onChange={(e) => handleConfirmPasswordChange(e.target.value)}
                                     placeholder="Confirm password"
                                     className="pr-12"
-                                    hasError={Boolean(fieldErrors.confirmPassword?.length)}
+                                    hasError={confirmPasswordErrors.length > 0}
                                     aria-describedby="confirm-password-errors"
-                                    disabled={loading || authState.isLoading}
+                                    disabled={!isPasswordValid || loading || authState.isLoading}
                                     required
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                     className="auth-toggle-visibility"
-                                    disabled={loading || authState.isLoading}
+                                    disabled={!isPasswordValid || loading || authState.isLoading || !confirmPassword}
+                                    aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
                                 >
                                     {showConfirmPassword ? 'Hide' : 'Show'}
                                 </button>
                             </div>
-                            <ValidationError id="confirm-password-errors" errors={fieldErrors.confirmPassword || []}/>
+                            <ValidationError id="confirm-password-errors" errors={confirmPasswordErrors}/>
 
+                            {/* Terms & Privacy */}
                             <label className="auth-helper flex items-start gap-2">
                                 <input
                                     type="checkbox"
@@ -219,6 +251,7 @@ const SignupPage = () => {
                                     onChange={(e) => setAcceptTerms(e.target.checked)}
                                     className="mt-1 h-4 w-4"
                                     disabled={loading || authState.isLoading}
+                                    aria-label="Accept terms of service and privacy policy"
                                 />
                                 <span>I agree to the <Link to="/terms"
                                                            className="auth-link underline">Terms of Service</Link> and <Link
@@ -226,11 +259,13 @@ const SignupPage = () => {
                             </label>
                             <ValidationError id="terms-errors" errors={fieldErrors.terms || []}/>
 
+                            {/* Primary CTA Button - only enabled when all conditions met */}
                             <AuthButton
                                 type="submit"
-                                disabled={loading || !password || !confirmPassword || authState.isLoading}
+                                disabled={!isFormValid}
+                                aria-label={isFormValid ? 'Get OTP' : 'Complete all fields to continue'}
                             >
-                                {loading ? 'Processing...' : 'Get OTP'}
+                                {loading ? 'Sending OTP...' : 'Get OTP'}
                             </AuthButton>
                         </div>
                         <RateLimitInfo/>
