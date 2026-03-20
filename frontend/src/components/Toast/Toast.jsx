@@ -3,20 +3,28 @@ import React, {useEffect, useMemo, useRef, useState} from 'react';
 const variantStyles = {
     success: {
         colorVar: 'var(--don-success)',
+        iconColor: 'rgba(76, 175, 80, 0.95)',
+        borderColor: 'rgba(76, 175, 80, 0.3)',
     },
     error: {
         colorVar: 'var(--don-danger)',
+        iconColor: 'rgba(244, 115, 100, 0.95)',
+        borderColor: 'rgba(244, 115, 100, 0.3)',
     },
     warning: {
         colorVar: 'var(--don-warning)',
+        iconColor: 'rgba(255, 152, 0, 0.95)',
+        borderColor: 'rgba(255, 152, 0, 0.3)',
     },
     info: {
         colorVar: 'var(--don-info)',
+        iconColor: 'rgba(66, 165, 245, 0.95)',
+        borderColor: 'rgba(66, 165, 245, 0.3)',
     },
 };
 
 const VariantIcon = ({variant}) => {
-    const common = 'h-4 w-4';
+    const common = 'h-5 w-5';
 
     if (variant === 'success') {
         return (
@@ -97,16 +105,21 @@ const Toast = ({title, message, variant = 'info', duration = 4000, onClose}) => 
             onMouseLeave={() => setIsPaused(false)}
             onFocusCapture={() => setIsPaused(true)}
             onBlurCapture={() => setIsPaused(false)}
-            className={`toast ${variant} ${isVisible && !isExiting ? 'toast-enter' : ''} ${isExiting ? 'toast-exit' : ''} relative w-full overflow-hidden`}
+            className={`toast ${variant} ${isVisible && !isExiting ? 'toast-enter' : ''} ${isExiting ? 'toast-exit' : ''} relative w-full overflow-hidden rounded-xl backdrop-blur-md`}
+            style={{
+                background: 'rgba(15, 15, 25, 0.6)',
+                border: `1px solid ${styles.borderColor}`,
+                boxShadow: `0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)`,
+            }}
         >
-            <div className="flex items-start gap-3">
-                <div className="mt-0.5" style={{color: styles.colorVar}}>
+            <div className="flex items-start gap-4 p-4">
+                <div className="mt-0.5 flex-shrink-0" style={{color: styles.iconColor}}>
                     <VariantIcon variant={variant} />
                 </div>
 
-                <div className="min-w-0 flex-1">
-                    <p className="toast-title">{title}</p>
-                    {message && <p className="toast-body mt-1">{message}</p>}
+                <div className="min-w-0 flex-1 pr-2">
+                    <p className="toast-title font-semibold text-white text-sm">{title}</p>
+                    {message && <p className="toast-body mt-1.5 text-xs opacity-80 text-white/90">{message}</p>}
                 </div>
 
                 <button
@@ -115,7 +128,7 @@ const Toast = ({title, message, variant = 'info', duration = 4000, onClose}) => 
                         window.setTimeout(() => onClose(), 250);
                     }}
                     aria-label="Dismiss notification"
-                    className="toast-close-btn"
+                    className="toast-close-btn flex-shrink-0 hover:bg-white/10 transition-colors"
                 >
                     <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
                         <path fill="currentColor" d="m18.3 5.71-1.41-1.42L12 9.17 7.11 4.29 5.7 5.71 10.59 10.6 5.7 15.49l1.41 1.42L12 12l4.89 4.91 1.41-1.42-4.89-4.89z"/>
@@ -124,13 +137,15 @@ const Toast = ({title, message, variant = 'info', duration = 4000, onClose}) => 
             </div>
 
             {duration > 0 && (
-                <div className="toast-progress-track">
+                <div className="toast-progress-track h-0.5 w-full bg-white/10 relative overflow-hidden">
                     <div
-                        className="toast-progress-bar"
+                        className="toast-progress-bar h-full"
                         style={Object.assign({}, {
                             '--progress-color': styles.colorVar,
-                            animation: isExiting ? 'none' : `toast-progress ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`,
+                            background: `linear-gradient(90deg, ${styles.iconColor}, ${styles.iconColor}cc)`,
+                            animation: isExiting ? 'none' : `toast-progress ${duration}ms linear forwards`,
                             width: isExiting ? '0%' : `${progressPct}%`,
+                            boxShadow: `0 0 6px ${styles.iconColor}`,
                         })}
                     />
                 </div>

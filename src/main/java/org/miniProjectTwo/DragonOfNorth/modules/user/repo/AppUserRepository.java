@@ -42,4 +42,6 @@ public interface AppUserRepository extends JpaRepository<@NonNull AppUser, @NonN
     @Query("select u.roles from AppUser u where u.id = :userId")
     Set<Role> findRolesById(@Param("userId") UUID uuid);
 
+    @Query("select u.isEmailVerified from AppUser u where u.id = :id")
+    boolean isEmailVerified(@Param("id") UUID id);
 }

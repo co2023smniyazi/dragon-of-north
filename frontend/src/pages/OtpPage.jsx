@@ -8,11 +8,18 @@ import AuthFlowProgress from '../components/AuthFlowProgress';
 import AuthCardLayout from '../components/auth/AuthCardLayout';
 import AuthButton from '../components/auth/AuthButton';
 
+const OTP_FLOW = {
+    SIGNUP: 'SIGNUP',
+    LOGIN_UNVERIFIED: 'LOGIN_UNVERIFIED',
+};
+
 const OtpPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const {toast} = useToast();
-    const {identifier, identifierType} = location.state || {};
+    const {identifier, identifierType, flow} = location.state || {};
+    const resolvedFlow = flow || OTP_FLOW.SIGNUP;
+    const isLoginUnverifiedFlow = resolvedFlow === OTP_FLOW.LOGIN_UNVERIFIED;
 
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
@@ -60,7 +67,11 @@ const OtpPage = () => {
         if (result?.api_response_status === 'success') {
             localStorage.removeItem('otpTimer');
             localStorage.removeItem('otpTimerTimestamp');
-            toast.success('Account verification completed. Please log in.');
+            toast.success(
+                isLoginUnverifiedFlow
+                    ? 'Email verified successfully. Please log in.'
+                    : 'Account verification completed. Please log in.'
+            );
             navigate('/login', {state: {identifier}});
             return true;
         }
@@ -127,8 +138,9 @@ const OtpPage = () => {
 
     return (
         <AuthCardLayout
-            title="Verify OTP"
-            subtitle={<span>Enter the 6-digit code sent to <span
+            title={isLoginUnverifiedFlow ? 'Verify your email' : 'Verify OTP'}
+            subtitle={
+                <span>{isLoginUnverifiedFlow ? 'Sign-in is blocked until email verification is complete. Enter the 6-digit verification code sent to ' : 'Enter the 6-digit code sent to '}<span
                 className="font-medium" style={{color: 'var(--don-accent-text)'}}>{identifier}</span></span>}
         >
             <AuthFlowProgress currentStep="otp"/>
@@ -143,7 +155,7 @@ const OtpPage = () => {
                     ))}
                 </div>
                 <AuthButton type="submit"
-                            disabled={loading || otp.join('').length !== 6}>{loading ? 'Verifying...' : 'Verify & Continue'}</AuthButton>
+                            disabled={loading || otp.join('').length !== 6}>{loading ? 'Verifying...' : (isLoginUnverifiedFlow ? 'Verify Email' : 'Verify & Continue')}</AuthButton>
                 <RateLimitInfo/>
             </form>
             <div className="mt-8 text-center">

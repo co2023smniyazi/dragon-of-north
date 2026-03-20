@@ -24,6 +24,11 @@ const AUTH_STEP = {
     GOOGLE_SIGNUP: 'GOOGLE_SIGNUP',
 };
 
+const OTP_FLOW = {
+    SIGNUP: 'SIGNUP',
+    LOGIN_UNVERIFIED: 'LOGIN_UNVERIFIED',
+};
+
 const AuthPage = () => {
     const navigate = useNavigate();
     const {toast} = useToast();
@@ -127,6 +132,38 @@ const AuthPage = () => {
         }, 150);
     };
 
+    const handleUnverifiedEmailLogin = async () => {
+        const unverifiedMessage = 'Email not verified. Redirecting to OTP verification...';
+        authState.setError(unverifiedMessage);
+        setShowAuthError(true);
+        toast.error(unverifiedMessage);
+
+        const otpResult = await apiService.post(
+            API_CONFIG.ENDPOINTS.EMAIL_OTP_REQUEST,
+            {
+                email: normalizedEmail,
+                otp_purpose: 'SIGNUP',
+            }
+        );
+
+        if (apiService.isErrorResponse(otpResult)) {
+            const otpErrorMessage = otpResult.message || 'Failed to send OTP. Please try again.';
+            authState.setError(otpErrorMessage);
+            setShowAuthError(true);
+            toast.error(otpErrorMessage);
+            return;
+        }
+
+        toast.success('OTP sent successfully. Please verify your email.');
+        navigate('/otp', {
+            state: {
+                identifier: normalizedEmail,
+                identifierType: 'EMAIL',
+                flow: OTP_FLOW.LOGIN_UNVERIFIED,
+            },
+        });
+    };
+
     const handleLocalLogin = async (event) => {
         event.preventDefault();
         if (!password || isGoogleRedirecting) return;
@@ -159,6 +196,11 @@ const AuthPage = () => {
                 result.backendMessage ||
                 result.message ||
                 'Login failed.';
+
+            if (result.errorCode === 'VAL_002') {
+                await handleUnverifiedEmailLogin();
+                return;
+            }
 
             if (backendMessage.toLowerCase().includes('google')) {
                 resetFlow();

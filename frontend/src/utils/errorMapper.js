@@ -12,6 +12,7 @@ const ERROR_MESSAGES = {
     USER_001: 'User account not found. Please check your credentials.',
     USER_002: 'Your account is already verified.',
     VAL_001: 'Please check your input and try again.',
+    VAL_002: 'Email not verified. Please verify your email with OTP before signing in.',
     OTP_001: 'Please wait {seconds} seconds before requesting another OTP.',
     OTP_002: 'Too many OTP attempts. Please try again in {minutes} minutes.',
     ROL_009: 'User role not found. Please contact support.',

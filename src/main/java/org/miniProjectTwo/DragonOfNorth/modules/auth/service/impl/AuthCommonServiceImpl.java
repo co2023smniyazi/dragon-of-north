@@ -80,10 +80,12 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
     public void login(String identifier, String password, HttpServletResponse response, HttpServletRequest request, String deviceId) {
         String ipAddress = request.getHeader("X-Forwarded-For");
         String requestId = request.getHeader("X-Request-Id");
+        UUID auditUserId = null;
         try {
             AppUser user = identifier.contains("@")
                     ? appUserRepository.findByEmail(identifier).orElseThrow(() -> new BusinessException(ErrorCode.AUTHENTICATION_FAILED))
                     : appUserRepository.findByPhone(identifier).orElseThrow(() -> new BusinessException(ErrorCode.AUTHENTICATION_FAILED));
+            auditUserId = user.getId();
 
             if (!userAuthProviderRepository.existsByUserIdAndProvider(user.getId(), LOCAL)) {
                 throw new BusinessException(ErrorCode.AUTHENTICATION_FAILED, "Account registered via Google. Use Google login.");
@@ -97,6 +99,9 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
 
             if (!(authentication.getPrincipal() instanceof AppUserDetails appUserDetails)) {
                 throw new BusinessException(ErrorCode.AUTHENTICATION_FAILED, "Invalid principal type");
+            }
+            if (!appUserRepository.isEmailVerified(user.getId())) {
+                throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED, "Email not verified. Please verify your email before logging in.");
             }
 
             AppUser appUser = appUserDetails.getAppUser();
@@ -112,7 +117,7 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
             auditEventLogger.log("auth.login", appUser.getId(), deviceId, ipAddress, "success", null, requestId);
         } catch (AuthenticationException | BusinessException exception) {
             meterRegistry.counter("auth.login.failure").increment();
-            auditEventLogger.log("auth.login", null, deviceId, ipAddress, "failure", exception.getMessage(), requestId);
+            auditEventLogger.log("auth.login", auditUserId, deviceId, ipAddress, "failure", exception.getMessage(), requestId);
             throw exception;
         }
 
@@ -250,10 +255,12 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
             } else {
                 otpService.createPhoneOtp(identifier, OtpPurpose.PASSWORD_RESET);
             }
+        } else {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "No user found with the provided identifier for password reset");
         }
 
         meterRegistry.counter("auth.password_reset.requested").increment();
-        auditEventLogger.log("auth.password_reset.request", user != null ? user.getId() : null, null, null, "success", "identifier_type=" + identifierType, null);
+        auditEventLogger.log("auth.password_reset.request", user.getId(), null, null, "success", "identifier_type=" + identifierType, null);
     }
 
     @Override

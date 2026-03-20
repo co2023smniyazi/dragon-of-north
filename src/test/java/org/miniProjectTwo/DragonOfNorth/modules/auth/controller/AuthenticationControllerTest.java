@@ -4,18 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.miniProjectTwo.DragonOfNorth.modules.auth.controller.AuthenticationController;
-import org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.AppUserSignUpCompleteRequest;
-import org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.AppUserStatusFinderRequest;
-import org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.PasswordResetConfirmRequest;
-import org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.PasswordResetRequestOtpRequest;
+import org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.*;
 import org.miniProjectTwo.DragonOfNorth.modules.auth.dto.response.AppUserStatusFinderResponse;
 import org.miniProjectTwo.DragonOfNorth.modules.auth.resolver.AuthenticationServiceResolver;
 import org.miniProjectTwo.DragonOfNorth.modules.auth.service.AuthCommonServices;
 import org.miniProjectTwo.DragonOfNorth.modules.auth.service.AuthenticationService;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.AppUserStatus;
+import org.miniProjectTwo.DragonOfNorth.shared.enums.ErrorCode;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.IdentifierType;
 import org.miniProjectTwo.DragonOfNorth.shared.exception.ApplicationExceptionHandler;
+import org.miniProjectTwo.DragonOfNorth.shared.exception.BusinessException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,8 +23,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -130,6 +129,23 @@ class AuthenticationControllerTest {
                 .andExpect(jsonPath("$.apiResponseStatus").value("success"));
 
         verify(authCommonServices).resetPassword(request);
+    }
+
+    @Test
+    void loginUser_shouldReturnUnauthorized_whenEmailNotVerified() throws Exception {
+        AppUserLoginRequest request = new AppUserLoginRequest("test@example.com", "Secret@123", "device-1");
+        doThrow(new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED, "Email not verified. Please verify your email before logging in."))
+                .when(authCommonServices)
+                .login(eq(request.identifier()), eq(request.password()), any(), any(), eq(request.deviceId()));
+
+        mockMvc.perform(post("/api/v1/auth/identifier/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.apiResponseStatus").value("failed"))
+                .andExpect(jsonPath("$.data.code").value("VAL_002"));
+
+        verify(authCommonServices).login(eq(request.identifier()), eq(request.password()), any(), any(), eq(request.deviceId()));
     }
 
 

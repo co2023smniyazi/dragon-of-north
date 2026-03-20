@@ -36,14 +36,15 @@ public enum ErrorCode {
     USER_ALREADY_VERIFIED("USER_002", "user is already verified", HttpStatus.CONFLICT),
 
     INVALID_INPUT("VAL_001", "invalid input", HttpStatus.BAD_REQUEST),
+    EMAIL_NOT_VERIFIED("VAL_002", "email not verified", HttpStatus.UNAUTHORIZED),
 
     OTP_RATE_LIMIT("OTP_001", "wait %s seconds before requesting another OTP for %s", HttpStatus.TOO_MANY_REQUESTS),
     OTP_TOO_MANY_REQUESTS("OTP_002", "Too many otp requests. Blocked for %s minutes.", HttpStatus.TOO_MANY_REQUESTS),
 
     INVALID_OAUTH_TOKEN("OAUTH_001", "Invalid OAuth token", HttpStatus.UNAUTHORIZED),
     EMAIL_ALREADY_EXISTS("OAUTH_002", "email is already associated with another OAuth provider", HttpStatus.CONFLICT),
-    USER_CREATION_FAILED("OAUTH_003", "User creation failed", HttpStatus.INTERNAL_SERVER_ERROR),
-    OAUTH_LINK_CONFIRMATION_REQUIRED("OAUTH_004", "Password confirmation required before linking OAuth account", HttpStatus.CONFLICT);
+    OAUTH_LINK_CONFIRMATION_REQUIRED("OAUTH_004", "Account exists. Login with password before linking Google", HttpStatus.CONFLICT),
+    USER_CREATION_FAILED("OAUTH_003", "User creation failed", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String defaultMessage;

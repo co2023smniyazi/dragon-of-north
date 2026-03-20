@@ -1312,70 +1312,37 @@ a:hover {
 
     /* ── TOAST ──────────────────────────────────── */
     .toast-container {
-        @apply fixed bottom-6 right-6 z-[9999] flex flex-col gap-2 pointer-events-none;
+        @apply fixed top-6 left-1/2 -translate-x-1/2 z-[120] flex flex-col gap-3 pointer-events-none;
     }
 
     .toast {
-        @apply min-w-[280px] max-w-[400px] pointer-events-auto;
-        --progress-color: var(--don-accent);
-        background: var(--don-bg-surface);
-        border: 1px solid var(--don-border-default);
-        border-left: 3px solid var(--don-accent);
-        border-radius: var(--r-lg);
-        padding: var(--s3) var(--s4);
+        @apply w-full max-w-sm pointer-events-auto rounded-xl;
         opacity: 0;
-        transform: translateY(-12px) scale(0.95);
-        transition: opacity 0.25s ease, transform 0.25s ease;
+        transform: translateY(-16px) scale(0.94);
+        transition: opacity 0.25s cubic-bezier(0.4, 0.0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
     }
 
     .toast.toast-enter {
-        animation: toast-slide-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        animation: toast-fade-in-down 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
 
     .toast.toast-exit {
-        animation: toast-fade-out 0.25s ease forwards;
-    }
-
-    .toast.success {
-        --progress-color: var(--don-success);
-        border-left-color: var(--don-success);
-    }
-
-    .toast.danger {
-        --progress-color: var(--don-danger);
-        border-left-color: var(--don-danger);
-    }
-
-    .toast.warning {
-        --progress-color: var(--don-warning);
-        border-left-color: var(--don-warning);
-    }
-
-    .toast.info {
-        --progress-color: var(--don-info);
-        border-left-color: var(--don-info);
+        animation: toast-fade-out-up 0.25s cubic-bezier(0.4, 0.0, 1, 1) forwards;
     }
 
     .toast-progress-track {
-        @apply h-0.5 w-full mt-3 overflow-hidden rounded-full;
-        background: rgba(0, 0, 0, 0.08);
-    }
-
-    .dark .toast-progress-track {
-        background: rgba(255, 255, 255, 0.06);
+        @apply h-0.5 w-full overflow-hidden;
     }
 
     .toast-progress-bar {
         @apply h-full;
-        background: var(--progress-color);
         transform-origin: left;
-        box-shadow: 0 0 8px var(--progress-color), inset 0 0 4px rgba(255, 255, 255, 0.3);
     }
 
-    @keyframes toast-slide-in {
+    @keyframes toast-fade-in-down {
         from {
             opacity: 0;
-            transform: translateY(-12px) scale(0.95);
+            transform: translateY(-16px) scale(0.94);
         }
         to {
             opacity: 1;
@@ -1383,19 +1350,19 @@ a:hover {
         }
     }
 
-    @keyframes toast-fade-out {
+    @keyframes toast-fade-out-up {
         to {
             opacity: 0;
-            transform: translateY(-12px) scale(0.95);
+            transform: translateY(-12px) scale(0.96);
         }
     }
 
     @keyframes toast-progress {
         from {
-            transform: scaleX(1);
+            width: 100%;
         }
         to {
-            transform: scaleX(0);
+            width: 0;
         }
     }
 
@@ -1405,17 +1372,17 @@ a:hover {
         display: flex;
         align-items: center;
         justify-content: center;
-        background: var(--toast-close-bg);
-        color: var(--toast-icon);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.7);
         border: none;
         border-radius: 6px;
         cursor: pointer;
-        transition: background-color 0.2s ease;
-        flex-shrink: 0;
+        transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     .toast-close-btn:hover {
-        background: var(--toast-close-hover);
+        background: rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 1);
     }
 
     .toast-close-btn svg {
@@ -1423,13 +1390,11 @@ a:hover {
     }
 
     .toast-title {
-        @apply text-sm font-semibold mb-1;
-        color: var(--don-text-primary);
+        color: rgba(255, 255, 255, 1);
     }
 
     .toast-body {
-        @apply text-[13px];
-        color: var(--don-text-secondary);
+        color: rgba(255, 255, 255, 0.8);
     }
 
     .toast-meta {

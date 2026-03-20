@@ -84,15 +84,26 @@ class ApiService {
     }
 
     normalizeApiError(data, fallbackMessage) {
-        const errorCode = data?.error_code || data?.errorCode || data?.code;
-        const message = data?.message || data?.defaultMessage;
-        const fieldErrors = data?.validation_error_list || data?.validationErrorList || [];
+        // Backend failures are wrapped in ApiResponse { apiResponseStatus, data: { code, defaultMessage, ... } }
+        const errorPayload = data?.data || data;
+        const errorCode = errorPayload?.error_code || errorPayload?.errorCode || errorPayload?.code;
+        const message =
+            errorPayload?.message ||
+            errorPayload?.defaultMessage ||
+            data?.message ||
+            data?.defaultMessage;
+        const fieldErrors =
+            errorPayload?.validation_error_list ||
+            errorPayload?.validationErrorList ||
+            data?.validation_error_list ||
+            data?.validationErrorList ||
+            [];
         return {
             errorCode,
-            message: mapErrorCodeToMessage(errorCode, data),
+            message: mapErrorCodeToMessage(errorCode, errorPayload || data),
             backendMessage: message,
             fieldErrors,
-            raw: data,
+            raw: errorPayload || data,
             fallbackMessage,
         };
     }
@@ -176,7 +187,7 @@ class ApiService {
                         type: 'API_ERROR',
                         status: response.status,
                         ...normalizedError,
-                        message: data?.message || defaultMessage,
+                        message: normalizedError.message || normalizedError.backendMessage || defaultMessage,
                         data,
                     };
                 }
