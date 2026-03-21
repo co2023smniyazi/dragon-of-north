@@ -26,11 +26,11 @@
 
 <p align="center">
   <a href="https://app.verloren.dev">
-    <img src="https://img.shields.io/badge/🌐_Live_App-app.verloren.dev-6B57FF?style=for-the-badge">
+    <img src="https://img.shields.io/badge/%F0%9F%8C%90_Live_App-app.verloren.dev-6B57FF?style=for-the-badge">
   </a>
   &nbsp;&nbsp;
   <a href="https://api.verloren.dev/swagger-ui/index.html">
-    <img src="https://img.shields.io/badge/📖_API_Docs-Swagger_UI-85EA2D?style=for-the-badge">
+    <img src="https://img.shields.io/badge/%F0%9F%93%96_API_Docs-Swagger_UI-85EA2D?style=for-the-badge">
   </a>
 </p>
 
@@ -50,10 +50,10 @@
 <!-- ─── STAT PILLS ────────────────────────────────────────────────── -->
 
 <p align="center">
-  <img src="https://img.shields.io/badge/🚀_Deployments-219%2B-brightgreen?style=for-the-badge">
-  <img src="https://img.shields.io/badge/🧪_Test_Classes-55%2B-6B57FF?style=for-the-badge">
-  <img src="https://img.shields.io/badge/⚡_k6_Scenarios-12-7D64FF?style=for-the-badge">
-  <img src="https://img.shields.io/badge/🗃️_Flyway-V1--V7-CC0200?style=for-the-badge">
+  <img src="https://img.shields.io/badge/%F0%9F%9A%80_Deployments-219%2B-brightgreen?style=for-the-badge">
+  <img src="https://img.shields.io/badge/%F0%9F%A7%AA_Test_Classes-55%2B-6B57FF?style=for-the-badge">
+  <img src="https://img.shields.io/badge/%E2%9A%A1_k6_Scenarios-12-7D64FF?style=for-the-badge">
+  <img src="https://img.shields.io/badge/%F0%9F%97%83%EF%B8%8F_Flyway-V1--V7-CC0200?style=for-the-badge">
 </p>
 
 <img src="https://capsule-render.vercel.app/api?type=rect&amp;color=0:6B57FF,100:0D0D12&amp;height=3" width="100%"/>
@@ -899,15 +899,15 @@ They're the baseline. This project treats them that way.
 <br>
 
 <a href="https://app.verloren.dev">
-  <img src="https://img.shields.io/badge/🌐_Live_App-app.verloren.dev-6B57FF?style=for-the-badge">
+  <img src="https://img.shields.io/badge/%F0%9F%8C%90_Live_App-app.verloren.dev-6B57FF?style=for-the-badge">
 </a>
 &nbsp;&nbsp;
 <a href="https://api.verloren.dev/swagger-ui/index.html">
-  <img src="https://img.shields.io/badge/📖_API_Docs-Swagger_UI-85EA2D?style=for-the-badge">
+  <img src="https://img.shields.io/badge/%F0%9F%93%96_API_Docs-Swagger_UI-85EA2D?style=for-the-badge">
 </a>
 &nbsp;&nbsp;
 <a href="https://github.com/Vinay2080">
-  <img src="https://img.shields.io/badge/👤_Author-Vinay_Patil-181717?style=for-the-badge&amp;logo=github">
+  <img src="https://img.shields.io/badge/%F0%9F%91%A4_Author-Vinay_Patil-181717?style=for-the-badge&amp;logo=github">
 </a>
 
 <br><br>
