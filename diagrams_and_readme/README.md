@@ -1,5 +1,8 @@
 # Dragon of North - Authentication System Diagrams
 
+> Looking for the full deep-dive explanation of architecture, controllers, security decisions, and feature rationale?
+> Read: [FINAL_README.md](./FINAL_README.md)
+
 This directory contains comprehensive diagrams and documentation for the Dragon of North authentication system. Each
 diagram illustrates specific security features, workflows, and the technical solutions implemented to address real-world
 security challenges.
