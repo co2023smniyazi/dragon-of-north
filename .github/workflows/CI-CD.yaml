@@ -11,6 +11,7 @@ on:
       - "mvnw"
       - ".mvn/**"
       - "Dockerfile"
+      - ".github/workflows/CI-CD.yaml"
 
   pull_request:
     branches: [ "main", "master" ]
@@ -32,15 +33,18 @@ jobs:
       packages: write
 
     steps:
+      # 📥 Checkout
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ☕ Java setup
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
+      # ⚡ Cache Maven
       - name: Cache Maven
         uses: actions/cache@v4
         with:
@@ -49,16 +53,20 @@ jobs:
           restore-keys: |
             maven-${{ runner.os }}-
 
+      # 🔧 Permissions
       - name: Make mvnw executable
         run: chmod +x mvnw
 
+      # 🧪 Tests (always run)
       - name: Run tests
         run: ./mvnw test
 
+      # 🐳 Docker build setup (ONLY for tags)
       - name: Set up Docker Buildx
         if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
         uses: docker/setup-buildx-action@v3
 
+      # 🏷️ Metadata (ONLY version tag, NO latest)
       - name: Extract Docker metadata
         if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
         id: meta
@@ -66,9 +74,9 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
             type=ref,event=tag
 
+      # 🔐 Login to GHCR
       - name: Log in to GHCR
         if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
         uses: docker/login-action@v3
@@ -77,6 +85,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # 📦 Build & Push image
       - name: Build and push Docker image
         if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
         uses: docker/build-push-action@v5
@@ -88,6 +97,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # 🚀 Deploy to EC2 (FULL stack, not just backend)
       - name: Deploy to EC2
         if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
         uses: appleboy/ssh-action@v1.0.3
@@ -100,13 +110,29 @@ jobs:
           envs: IMAGE_TAG
           script: |
             cd app
+
+            # 🔥 Set version dynamically
             export IMAGE_TAG="$IMAGE_TAG"
+            echo "Deploying version: $IMAGE_TAG"
 
-            docker compose pull backend
-            docker compose up -d backend
+            # 📥 Pull latest images (all services)
+            docker compose pull
 
-            echo "Waiting for application to start..."
-            sleep 15
+            # 🚀 Start ALL services (nginx included)
+            docker compose up -d
 
-            curl -f http://localhost:8080/actuator/health || exit 1
-            echo "Deployment successful."
+            # 🧹 Cleanup old images (safe)
+            docker image prune -f
+
+            # ⏳ Wait for backend
+            echo "Waiting for backend health..."
+            for i in {1..10}; do
+              if curl -f http://localhost:8080/actuator/health; then
+                echo "Deployment successful."
+                exit 0
+              fi
+              sleep 5
+            done
+
+            echo "Deployment failed!"
+            exit 1
