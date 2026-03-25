@@ -44,7 +44,9 @@ public enum ErrorCode {
     INVALID_OAUTH_TOKEN("OAUTH_001", "Invalid OAuth token", HttpStatus.UNAUTHORIZED),
     EMAIL_ALREADY_EXISTS("OAUTH_002", "email is already associated with another OAuth provider", HttpStatus.CONFLICT),
     OAUTH_LINK_CONFIRMATION_REQUIRED("OAUTH_004", "Account exists. Login with password before linking Google", HttpStatus.CONFLICT),
-    USER_CREATION_FAILED("OAUTH_003", "User creation failed", HttpStatus.INTERNAL_SERVER_ERROR);
+    USER_CREATION_FAILED("OAUTH_003", "User creation failed", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    PROFILE_ALREADY_EXISTS("PROFILE_001", "Profile already exists", HttpStatus.CONFLICT);
 
     private final String code;
     private final String defaultMessage;

@@ -9,6 +9,7 @@ import org.miniProjectTwo.DragonOfNorth.modules.auth.repo.UserAuthProviderReposi
 import org.miniProjectTwo.DragonOfNorth.modules.auth.resolver.AuthenticationServiceResolver;
 import org.miniProjectTwo.DragonOfNorth.modules.auth.service.AuthCommonServices;
 import org.miniProjectTwo.DragonOfNorth.modules.auth.service.AuthenticationService;
+import org.miniProjectTwo.DragonOfNorth.modules.profile.service.ProfileService;
 import org.miniProjectTwo.DragonOfNorth.modules.user.model.AppUser;
 import org.miniProjectTwo.DragonOfNorth.modules.user.repo.AppUserRepository;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.IdentifierType;
@@ -42,6 +43,7 @@ public class EmailAuthenticationServiceImpl implements AuthenticationService {
     private final AuthCommonServices authCommonServices;
     private final MeterRegistry meterRegistry;
     private final AuditEventLogger auditEventLogger;
+    private final ProfileService profileService;
 
 
     /**
@@ -65,8 +67,8 @@ public class EmailAuthenticationServiceImpl implements AuthenticationService {
      * {@code AppUserStatusFinderResponse.notFound()} result. For existing
      * users the response contains the current {@code AppUser.appUserStatus}
      * (for example {@code ACTIVE} or {@code LOCKED/DELETED}) along with
-     * provider information and the email-verified flag. This information is
-     * consumed by the frontend to decide the next authentication step.
+     * provider information and the email-verified flag. The frontend
+     * consumes this information to decide the next authentication step.
      *
      * @param identifier email address to check
      * @return user status response or NOT_EXIST status
@@ -128,14 +130,14 @@ public class EmailAuthenticationServiceImpl implements AuthenticationService {
     /**
      * Completes user registration with email verification.
      * <p>
-     * Finalizes registration after verification (for example, after a
+     * Finalizes registration after verification (for example, after
      * successful OTP/email verification). This method assigns a default
      * USER role, sets the {@code emailVerified} flag to {@code true} and
      * persists changes transactionally so the user can fully authenticate.
      * Note: the method does not assume the use of intermediary statuses like
      * {@code CREATED} or {@code VERIFIED} — it updates verification state and
      * performs role provisioning according to the current status model
-     * (e.g. the account may already be {@code ACTIVE}).
+     * (e.g., the account may already be {@code ACTIVE}).
      *
      * @param identifier email address to complete registration
      * @return updated user status response
@@ -149,6 +151,7 @@ public class EmailAuthenticationServiceImpl implements AuthenticationService {
             authCommonServices.assignDefaultRole(appUser);
             appUser.setEmailVerified(true);
             appUserRepository.save(appUser);
+            profileService.createProfile(appUser, null);
             meterRegistry.counter("auth.signup.complete.success").increment();
             auditEventLogger.log("auth.signup.complete", appUser.getId(), null, null, "success", "identifier_type=EMAIL", null);
             return getUserStatus(identifier);
@@ -158,5 +161,6 @@ public class EmailAuthenticationServiceImpl implements AuthenticationService {
             throw ex;
         }
     }
+
 
 }

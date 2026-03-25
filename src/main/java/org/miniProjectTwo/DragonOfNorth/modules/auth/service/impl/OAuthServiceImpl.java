@@ -8,6 +8,7 @@ import org.miniProjectTwo.DragonOfNorth.modules.auth.model.UserAuthProvider;
 import org.miniProjectTwo.DragonOfNorth.modules.auth.repo.UserAuthProviderRepository;
 import org.miniProjectTwo.DragonOfNorth.modules.auth.service.GoogleTokenVerifierService;
 import org.miniProjectTwo.DragonOfNorth.modules.auth.service.OAuthService;
+import org.miniProjectTwo.DragonOfNorth.modules.profile.service.ProfileService;
 import org.miniProjectTwo.DragonOfNorth.modules.session.service.SessionService;
 import org.miniProjectTwo.DragonOfNorth.modules.user.model.AppUser;
 import org.miniProjectTwo.DragonOfNorth.modules.user.repo.AppUserRepository;
@@ -40,6 +41,7 @@ public class OAuthServiceImpl implements OAuthService {
     private final UserAuthProviderRepository userAuthProviderRepository;
     private final RoleRepository roleRepository;
     private final AuthCommonServiceImpl authCommonServiceImpl;
+    private final ProfileService profileService;
 
     @Override
     @Transactional
@@ -147,6 +149,7 @@ public class OAuthServiceImpl implements OAuthService {
 
             AppUser savedUser = appUserRepository.save(newUser);
             linkGoogleProvider(savedUser, userInfo.sub());
+            profileService.createProfile(savedUser, userInfo);
             return savedUser;
 
         } catch (DataIntegrityViolationException e) {
