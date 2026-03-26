@@ -37,7 +37,7 @@ export const AuthProvider = ({children}) => {
                 setUser(hydratedUser);
             }
 
-            const sessionResult = await apiService.get(API_CONFIG.ENDPOINTS.SESSIONS_ALL, {skipAuthRefresh: true});
+            const sessionResult = await apiService.get(API_CONFIG.ENDPOINTS.SESSIONS_ALL);
             if (!apiService.isErrorResponse(sessionResult) && Array.isArray(sessionResult?.data)) {
                 setIsAuthenticated(true);
                 localStorage.setItem('isAuthenticated', 'true');

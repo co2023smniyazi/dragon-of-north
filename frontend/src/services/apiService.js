@@ -2,7 +2,7 @@ import {API_CONFIG} from '../config';
 import {getDeviceId} from '../utils/device';
 import {mapErrorCodeToMessage} from '../utils/errorMapper';
 import {exponentialBackoffDelay, shouldRetryRequest, wait} from '../utils/networkUtils';
-import {CSRF_HEADER_NAME, ensureCsrfToken, isStateChangingMethod} from '../utils/csrf';
+import {CSRF_COOKIE_NAME, CSRF_HEADER_NAME, ensureCsrfToken, isStateChangingMethod, readCookie} from '../utils/csrf';
 
 const AUTO_REFRESH_EXCLUDED_ENDPOINTS = new Set([
     API_CONFIG.ENDPOINTS.LOGIN,
@@ -12,6 +12,21 @@ const AUTO_REFRESH_EXCLUDED_ENDPOINTS = new Set([
     API_CONFIG.ENDPOINTS.PASSWORD_CHANGE,
     API_CONFIG.ENDPOINTS.PASSWORD_RESET_REQUEST,
     API_CONFIG.ENDPOINTS.PASSWORD_RESET_CONFIRM,
+]);
+
+const CSRF_OPTIONAL_ENDPOINTS = new Set([
+    API_CONFIG.ENDPOINTS.IDENTIFIER_STATUS,
+    API_CONFIG.ENDPOINTS.LOGIN,
+    API_CONFIG.ENDPOINTS.SIGNUP,
+    API_CONFIG.ENDPOINTS.SIGNUP_COMPLETE,
+    API_CONFIG.ENDPOINTS.OAUTH_GOOGLE,
+    API_CONFIG.ENDPOINTS.OAUTH_GOOGLE_SIGNUP,
+    API_CONFIG.ENDPOINTS.PASSWORD_RESET_REQUEST,
+    API_CONFIG.ENDPOINTS.PASSWORD_RESET_CONFIRM,
+    API_CONFIG.ENDPOINTS.EMAIL_OTP_REQUEST,
+    API_CONFIG.ENDPOINTS.EMAIL_OTP_VERIFY,
+    API_CONFIG.ENDPOINTS.PHONE_OTP_REQUEST,
+    API_CONFIG.ENDPOINTS.PHONE_OTP_VERIFY,
 ]);
 
 class ApiService {
@@ -71,17 +86,23 @@ class ApiService {
 
         this.isRefreshing = true;
 
-        this.refreshPromise = ensureCsrfToken().then(csrfToken => {
+        this.refreshPromise = (async () => {
+            const csrfToken = readCookie(CSRF_COOKIE_NAME);
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+
+            if (csrfToken) {
+                headers[CSRF_HEADER_NAME] = csrfToken;
+            }
+
             return fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REFRESH_TOKEN}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    [CSRF_HEADER_NAME]: csrfToken,
-                },
+                headers,
                 credentials: 'include',
                 body: JSON.stringify({device_id: getDeviceId()}),
             });
-        }).then(res => {
+        })().then(res => {
             if (!res.ok) {
                 throw new Error('Refresh failed');
             }
@@ -102,6 +123,7 @@ class ApiService {
             errorPayload?.defaultMessage ||
             data?.message ||
             data?.defaultMessage;
+        const isExpiredJwtMessage = typeof message === 'string' && /expired\s+jwt|jwt\s+expired|token\s+expired/i.test(message);
         const fieldErrors =
             errorPayload?.validation_error_list ||
             errorPayload?.validationErrorList ||
@@ -110,7 +132,9 @@ class ApiService {
             [];
         return {
             errorCode,
-            message: mapErrorCodeToMessage(errorCode, errorPayload || data),
+            message: isExpiredJwtMessage
+                ? 'Your session has expired. Please log in again.'
+                : mapErrorCodeToMessage(errorCode, errorPayload || data),
             backendMessage: message,
             fieldErrors,
             raw: errorPayload || data,
@@ -138,11 +162,15 @@ class ApiService {
 
         try {
             if (isStateChangingMethod(method)) {
-                const csrfToken = await ensureCsrfToken();
-                defaultOptions.headers = {
-                    ...defaultOptions.headers,
-                    [CSRF_HEADER_NAME]: csrfToken,
-                };
+                const csrfIsOptionalForEndpoint = CSRF_OPTIONAL_ENDPOINTS.has(endpoint);
+
+                if (!csrfIsOptionalForEndpoint) {
+                    const csrfToken = await ensureCsrfToken();
+                    defaultOptions.headers = {
+                        ...defaultOptions.headers,
+                        [CSRF_HEADER_NAME]: csrfToken,
+                    };
+                }
             }
 
             const response = await fetch(url, defaultOptions);

@@ -18,11 +18,6 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
             """)
     boolean existsProfileByAppUser(AppUser appUser);
 
-    @Query("""
-            select p
-            from Profile p
-            where p.appUser = :appUser
-            """)
     Optional<Profile> findByAppUserId(UUID userId);
 
     boolean existsByAppUserId(UUID userId);
