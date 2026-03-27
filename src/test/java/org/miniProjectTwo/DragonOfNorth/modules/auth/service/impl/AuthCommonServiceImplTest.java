@@ -3,9 +3,11 @@ package org.miniProjectTwo.DragonOfNorth.modules.auth.service.impl;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.AuthRequestContext;
+import org.miniProjectTwo.DragonOfNorth.modules.auth.dto.request.PasswordChangeRequest;
 import org.miniProjectTwo.DragonOfNorth.modules.auth.repo.UserAuthProviderRepository;
 import org.miniProjectTwo.DragonOfNorth.modules.otp.service.OtpService;
 import org.miniProjectTwo.DragonOfNorth.modules.session.service.SessionService;
@@ -24,7 +26,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
@@ -74,6 +79,11 @@ class AuthCommonServiceImplTest {
 
     @Mock
     private AuditEventLogger auditEventLogger;
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     void assignDefaultRole_shouldAssignUserRole_whenUserHasNoRoles() {
@@ -169,5 +179,29 @@ class AuthCommonServiceImplTest {
         verify(sessionService, never()).createSession(any(), anyString(), anyString(), anyString(), anyString());
         verify(meterRegistry).counter("auth.login.failure");
         verify(auditEventLogger).log(eq("auth.login"), eq(user.getId()), eq("device-1"), eq("127.0.0.1"), eq("failure"), argThat(msg -> msg != null && msg.toLowerCase().contains("not verified")), eq("req-1"));
+    }
+
+    @Test
+    void changePassword_shouldRejectGoogleOnlyAccounts() {
+        UUID userId = UUID.randomUUID();
+        AppUser user = new AppUser();
+        user.setId(userId);
+        user.setPassword("encoded-password");
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new UsernamePasswordAuthenticationToken(userId, null, Set.of()));
+        SecurityContextHolder.setContext(context);
+
+        when(appUserRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userAuthProviderRepository.existsByUserIdAndProvider(userId, Provider.LOCAL)).thenReturn(false);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> authCommonService.changePassword(new PasswordChangeRequest("Old@12345", "New@12345")));
+
+        assertEquals(ErrorCode.PASSWORD_CHANGE_NOT_ALLOWED, exception.getErrorCode());
+        assertEquals("Password change not allowed for Google accounts", exception.getMessage());
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(appUserRepository, never()).save(any());
+        verify(sessionService, never()).revokeAllSessionsByUserId(any());
     }
 }

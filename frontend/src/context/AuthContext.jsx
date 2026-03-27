@@ -3,6 +3,7 @@ import {apiService} from '../services/apiService';
 import {AuthContext} from './authContext';
 import {API_CONFIG} from '../config';
 import {getDeviceId} from '../utils/device.js';
+import {clearAccessToken} from '../services/tokenStore';
 
 const IDENTIFIER_HINT_KEY = 'auth_identifier_hint';
 
@@ -13,16 +14,8 @@ export const AuthProvider = ({children}) => {
 
     const checkAuthStatus = useCallback(async () => {
         try {
-            const hasAuthSessionFlag = localStorage.getItem('isAuthenticated') === 'true';
             const storedUserRaw = localStorage.getItem('user');
             const identifierHint = localStorage.getItem(IDENTIFIER_HINT_KEY);
-            const hasBootstrapAuthSignal = hasAuthSessionFlag || Boolean(storedUserRaw) || Boolean(identifierHint);
-
-            if (!hasBootstrapAuthSignal) {
-                setIsAuthenticated(false);
-                setUser(null);
-                return;
-            }
 
             let hydratedUser = null;
 
@@ -35,6 +28,22 @@ export const AuthProvider = ({children}) => {
 
             if (hydratedUser) {
                 setUser(hydratedUser);
+            }
+
+            let refreshSucceeded = false;
+            try {
+                await apiService.refreshToken();
+                refreshSucceeded = true;
+            } catch (refreshError) {
+                console.warn('Session refresh on startup failed:', refreshError);
+            }
+
+            if (!refreshSucceeded) {
+                setIsAuthenticated(false);
+                setUser(null);
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('user');
+                return;
             }
 
             const sessionResult = await apiService.get(API_CONFIG.ENDPOINTS.SESSIONS_ALL);
@@ -51,6 +60,9 @@ export const AuthProvider = ({children}) => {
         } catch (error) {
             console.error('Auth check failed:', error);
             setIsAuthenticated(false);
+            setUser(null);
+            localStorage.removeItem('isAuthenticated');
+            localStorage.removeItem('user');
         } finally {
             setIsLoading(false);
         }
@@ -87,6 +99,7 @@ export const AuthProvider = ({children}) => {
         } finally {
             setIsAuthenticated(false);
             setUser(null);
+            clearAccessToken();
             localStorage.removeItem('isAuthenticated');
             localStorage.removeItem('user');
             localStorage.removeItem(IDENTIFIER_HINT_KEY);

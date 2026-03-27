@@ -325,6 +325,10 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
         AppUser appUser = appUserRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        if (!userAuthProviderRepository.existsByUserIdAndProvider(appUser.getId(), LOCAL)) {
+            throw new BusinessException(ErrorCode.PASSWORD_CHANGE_NOT_ALLOWED);
+        }
+
         if (!passwordEncoder.matches(request.oldPassword(), appUser.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "Old password is incorrect");
         }

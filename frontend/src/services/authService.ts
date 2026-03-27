@@ -1,6 +1,6 @@
 import apiClient from '../api/client';
+import {clearAccessToken, extractAccessToken, setAccessToken} from './tokenStore';
 
-const TOKEN_KEY = 'auth_token';
 const AUTH_EVENT = 'auth-token-changed';
 
 const notifyAuthChange = () => {
@@ -8,7 +8,7 @@ const notifyAuthChange = () => {
 };
 
 const extractToken = (payload: any) => {
-    return payload?.token || payload?.access_token || payload?.jwt || payload?.data?.token;
+    return extractAccessToken(payload);
 };
 
 export const login = async (email: string, password: string) => {
@@ -20,7 +20,7 @@ export const login = async (email: string, password: string) => {
     const token = extractToken(response?.data);
 
     if (token) {
-        localStorage.setItem(TOKEN_KEY, token);
+        setAccessToken(token);
         notifyAuthChange();
     }
 
@@ -40,7 +40,7 @@ export const logout = async () => {
     try {
         await apiClient.post('/api/v1/auth/identifier/logout');
     } finally {
-        localStorage.removeItem(TOKEN_KEY);
+        clearAccessToken();
         notifyAuthChange();
     }
 };

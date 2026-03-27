@@ -21,12 +21,14 @@ const EMPTY_PASSWORD_ERRORS = {
 
 const MIN_PASSWORD_LENGTH = 8;
 
-const SecuritySection = () => {
+const SecuritySection = ({authProvider}) => {
     const {toast} = useToast();
     const {user} = useAuth();
     const [passwordForm, setPasswordForm] = useState(EMPTY_PASSWORD_STATE);
     const [passwordErrors, setPasswordErrors] = useState(EMPTY_PASSWORD_ERRORS);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const normalizedAuthProvider = String(authProvider || '').toUpperCase();
+    const canChangePassword = !normalizedAuthProvider || normalizedAuthProvider === 'LOCAL';
 
     const resetPasswordForm = () => {
         setPasswordForm(EMPTY_PASSWORD_STATE);
@@ -86,7 +88,7 @@ const SecuritySection = () => {
 
     const submitPassword = async (event) => {
         event.preventDefault();
-        if (isSubmitting) {
+        if (isSubmitting || !canChangePassword) {
             return;
         }
 
@@ -126,10 +128,15 @@ const SecuritySection = () => {
         <section className="rounded-xl border border-border bg-card p-6">
             <div className="mb-4">
                 <h2 className="text-lg font-semibold text-foreground">Security</h2>
-                <p className="text-sm text-muted-foreground">Change your password and keep your account protected.</p>
+                <p className="text-sm text-muted-foreground">
+                    {canChangePassword
+                        ? 'Change your password and keep your account protected.'
+                        : 'You signed in with Google. Password is managed by Google.'}
+                </p>
             </div>
 
-            <form className="space-y-4" onSubmit={submitPassword}>
+            {!canChangePassword ? null : (
+                <form className="space-y-4" onSubmit={submitPassword}>
                 {/* Improves password-manager accessibility by providing username context. */}
                 <input
                     type="text"
@@ -198,7 +205,8 @@ const SecuritySection = () => {
                         </span>
                     ) : 'Update password'}
                 </AuthButton>
-            </form>
+                </form>
+            )}
         </section>
     );
 };

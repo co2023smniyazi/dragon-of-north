@@ -14,6 +14,7 @@ const EMPTY_PROFILE = {
     displayName: '',
     bio: '',
     avatarUrl: '',
+    authProvider: null,
 };
 
 const EMPTY_PROFILE_ERRORS = {
@@ -27,6 +28,7 @@ const normalizeProfile = (payload = {}) => ({
     displayName: payload?.displayName || payload?.display_name || '',
     bio: payload?.bio || '',
     avatarUrl: payload?.avatarUrl || payload?.avatar_url || '',
+    authProvider: payload?.authProvider || payload?.auth_provider || null,
 });
 
 const getResponseData = (result) => {
@@ -71,7 +73,13 @@ const buildProfileFromUser = (user) => ({
     displayName: user?.displayName || user?.display_name || '',
     bio: user?.bio || '',
     avatarUrl: user?.avatarUrl || user?.avatar_url || '',
+    authProvider: user?.authProvider || user?.auth_provider || null,
 });
+
+const PROFILE_PATCH_FIELD_MAP = {
+    displayName: 'display_name',
+    avatarUrl: 'avatar_url',
+};
 
 const ProfilePage = () => {
     const navigate = useNavigate();
@@ -97,6 +105,7 @@ const ProfilePage = () => {
             displayName: profilePayload.displayName,
             avatarUrl: profilePayload.avatarUrl,
             bio: profilePayload.bio,
+            authProvider: profilePayload.authProvider,
         });
     }, [patchUser]);
 
@@ -170,7 +179,8 @@ const ProfilePage = () => {
             }
 
             if (currentValue !== initialValue) {
-                candidate[field] = currentValue;
+                const apiField = PROFILE_PATCH_FIELD_MAP[field] || field;
+                candidate[apiField] = currentValue;
             }
         });
 
@@ -251,7 +261,8 @@ const ProfilePage = () => {
                 />
 
                 <div className="space-y-6">
-                    <SecuritySection/>
+                    <SecuritySection
+                        authProvider={profileForm.authProvider || user?.authProvider || user?.auth_provider}/>
 
                     <section className="rounded-xl border border-border bg-card p-6">
                         <h2 className="text-lg font-semibold text-foreground">Session summary</h2>

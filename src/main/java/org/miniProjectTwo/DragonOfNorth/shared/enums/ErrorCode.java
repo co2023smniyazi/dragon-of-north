@@ -29,6 +29,7 @@ public enum ErrorCode {
     AUTHENTICATION_FAILED("AUTH_005", "Invalid username or password", HttpStatus.UNAUTHORIZED),
     ACCESS_DENIED("AUTH_006", "Access is denied", HttpStatus.FORBIDDEN),
     CSRF_INVALID("AUTH_007", "Invalid or missing CSRF token", HttpStatus.FORBIDDEN),
+    PASSWORD_CHANGE_NOT_ALLOWED("AUTH_008", "Password change not allowed for Google accounts", HttpStatus.FORBIDDEN),
 
     ROLE_NOT_FOUND("ROL_009", "role %s not found", HttpStatus.NOT_FOUND),
 

@@ -39,7 +39,7 @@ app:
         access-token: ${access_token}
         refresh-token: ${refresh_token}
     cookie:
-      same-site: ${cookie_same_site}
+      same-site: ${cookie_same_site:None}
       secure: ${cookie_secure}
 
 otp:

@@ -1,4 +1,7 @@
 import {CSRF_HEADER_NAME, ensureCsrfToken, isStateChangingMethod} from '../utils/csrf';
+import {API_CONFIG} from '../config';
+import {getDeviceId} from '../utils/device';
+import {clearAccessToken, extractAccessToken, getAccessToken, setAccessToken} from '../services/tokenStore';
 
 type RequestConfig = {
     baseURL?: string;
@@ -7,19 +10,61 @@ type RequestConfig = {
     headers?: Record<string, string>;
     data?: unknown;
     withCredentials?: boolean;
+    __isRetryRequest?: boolean;
 };
 
 type RequestInterceptor = (config: RequestConfig) => RequestConfig | Promise<RequestConfig>;
-
-type ResponseInterceptor = 
-    | ((response: {data: unknown; status: number; headers: Headers}) => unknown)
-    | ((error: unknown) => Promise<never>);
 
 const requestInterceptors: RequestInterceptor[] = [];
 const responseSuccessInterceptors: Array<(response: {data: unknown; status: number; headers: Headers}) => unknown> = [];
 const responseErrorInterceptors: Array<(error: unknown) => Promise<never>> = [];
 
-const getToken = () => localStorage.getItem('auth_token');
+let refreshPromise: Promise<void> | null = null;
+
+const extractAuthErrorStatus = (error: unknown): number | null => {
+    const errorRecord = error as { response?: { status?: number } };
+    return typeof errorRecord?.response?.status === 'number' ? errorRecord.response.status : null;
+};
+
+const tryPersistToken = (payload: unknown): void => {
+    const token = extractAccessToken(payload as Record<string, unknown>);
+    if (token) {
+        setAccessToken(token);
+    }
+};
+
+const refreshAccessToken = async (): Promise<void> => {
+    if (refreshPromise) {
+        return refreshPromise;
+    }
+
+    refreshPromise = (async () => {
+        const csrfToken = await ensureCsrfToken();
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}${API_CONFIG.ENDPOINTS.REFRESH_TOKEN}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [CSRF_HEADER_NAME]: csrfToken,
+            },
+            credentials: 'include',
+            body: JSON.stringify({device_id: getDeviceId()}),
+        });
+
+        if (!response.ok) {
+            clearAccessToken();
+            throw new Error('Refresh request failed');
+        }
+
+        const payload = await parseResponseBody(response);
+        tryPersistToken(payload);
+    })();
+
+    try {
+        await refreshPromise;
+    } finally {
+        refreshPromise = null;
+    }
+};
 
 const applyRequestInterceptors = async (config: RequestConfig) => {
     let currentConfig = config;
@@ -83,10 +128,24 @@ const create = (defaults: RequestConfig) => {
         });
 
         const data = await parseResponseBody(response);
+        tryPersistToken(data);
 
         if (!response.ok) {
             const error: unknown = {response: {status: response.status, data}};
-            return runErrorInterceptors(error);
+            try {
+                return await runErrorInterceptors(error);
+            } catch (interceptorError) {
+                const shouldRetry =
+                    extractAuthErrorStatus(interceptorError) === 401
+                    && !config.__isRetryRequest;
+
+                if (shouldRetry) {
+                    await refreshAccessToken();
+                    return request({...config, __isRetryRequest: true});
+                }
+
+                throw interceptorError;
+            }
         }
 
         return runSuccessInterceptors({data, status: response.status, headers: response.headers});
@@ -95,7 +154,9 @@ const create = (defaults: RequestConfig) => {
     return {
         interceptors: {
             request: {
-                use: (interceptor: RequestInterceptor): void => requestInterceptors.push(interceptor),
+                use: (interceptor: RequestInterceptor): void => {
+                    requestInterceptors.push(interceptor);
+                },
             },
             response: {
                 use: (
@@ -122,7 +183,7 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config: RequestConfig): RequestConfig => {
-    const token = getToken();
+    const token = getAccessToken();
     if (!token) return config;
 
     return {

@@ -3,6 +3,7 @@ import {getDeviceId} from '../utils/device';
 import {mapErrorCodeToMessage} from '../utils/errorMapper';
 import {exponentialBackoffDelay, shouldRetryRequest, wait} from '../utils/networkUtils';
 import {CSRF_COOKIE_NAME, CSRF_HEADER_NAME, ensureCsrfToken, isStateChangingMethod, readCookie} from '../utils/csrf';
+import {clearAccessToken, extractAccessToken, getAccessToken, setAccessToken} from './tokenStore';
 
 const AUTO_REFRESH_EXCLUDED_ENDPOINTS = new Set([
     API_CONFIG.ENDPOINTS.LOGIN,
@@ -87,7 +88,11 @@ class ApiService {
         this.isRefreshing = true;
 
         this.refreshPromise = (async () => {
-            const csrfToken = readCookie(CSRF_COOKIE_NAME);
+            let csrfToken = readCookie(CSRF_COOKIE_NAME);
+            if (!csrfToken) {
+                csrfToken = await ensureCsrfToken();
+            }
+
             const headers = {
                 'Content-Type': 'application/json',
             };
@@ -102,11 +107,15 @@ class ApiService {
                 credentials: 'include',
                 body: JSON.stringify({device_id: getDeviceId()}),
             });
-        })().then(res => {
+        })().then(async (res) => {
             if (!res.ok) {
+                clearAccessToken();
                 throw new Error('Refresh failed');
             }
-            return this.parseBody(res);
+
+            const responseData = await this.parseBody(res);
+            this.persistAccessToken(responseData);
+            return responseData;
         }).finally(() => {
             this.isRefreshing = false;
         });
@@ -142,6 +151,13 @@ class ApiService {
         };
     }
 
+    persistAccessToken(payload) {
+        const token = extractAccessToken(payload);
+        if (token) {
+            setAccessToken(token);
+        }
+    }
+
     async request(endpoint, options = {}, retry = true, attempt = 0) {
         if (typeof navigator !== 'undefined' && !navigator.onLine) {
             return {
@@ -157,6 +173,11 @@ class ApiService {
             credentials: 'include',
             ...requestOptions,
         };
+
+        const accessToken = getAccessToken();
+        if (accessToken) {
+            defaultOptions.headers.Authorization = `Bearer ${accessToken}`;
+        }
 
         const method = (defaultOptions.method || 'GET').toUpperCase();
 
@@ -187,6 +208,7 @@ class ApiService {
                         await this.refreshToken();
                         return this.request(endpoint, options, false, attempt);
                     } catch (refreshError) {
+                        clearAccessToken();
                         console.error('Token refresh failed:', refreshError);
                         // Refresh failure should degrade to a normal 401 flow.
                         // Avoid mutating auth storage in the API layer; auth context owns that state.
@@ -214,6 +236,7 @@ class ApiService {
 
                 // Handle specific auth errors with better messages
                 if (response.status === 401) {
+                    clearAccessToken();
                     const defaultMessage = endpoint === API_CONFIG.ENDPOINTS.LOGIN
                         ? 'Invalid email or password. Please check your credentials and try again.'
                         : 'Authentication failed. Please log in again.';
@@ -248,6 +271,8 @@ class ApiService {
                     data,
                 };
             }
+
+            this.persistAccessToken(data);
 
             return data;
         } catch (error) {

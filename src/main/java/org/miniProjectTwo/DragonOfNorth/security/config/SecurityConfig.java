@@ -62,6 +62,7 @@ public class SecurityConfig {
             "/api/v1/auth/oauth/google/signup",
             "/api/v1/auth/password/forgot/request",
             "/api/v1/auth/password/forgot/reset",
+            "/api/v1/auth/csrf",
             "/api/v1/otp/**",
 
             //swagger ui and OpenAPI documentation
