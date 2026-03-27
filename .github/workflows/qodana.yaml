@@ -21,12 +21,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Ensure Maven wrapper is executable
+        run: chmod +x ./mvnw
+
       - name: Qodana Scan
         uses: JetBrains/qodana-action@v2025.3
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
         with:
-          args: --image,jetbrains/qodana-jvm-community:2025.3
+          args: --image jetbrains/qodana-jvm-community:2025.3
           pr-mode: true              # scan only changed files → less noise
           use-caches: true
           upload-result: true        # view reports in GitHub UI

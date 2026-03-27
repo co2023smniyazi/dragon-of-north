@@ -3,7 +3,7 @@ version: "1.0"
 profile:
   name: qodana.recommended
 
-bootstrap: ./mvnw -q -DskipTests compile test-compile
+bootstrap: sh ./mvnw -q -DskipTests compile test-compile
 
 failThreshold: 5
 
