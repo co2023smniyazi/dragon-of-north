@@ -1,28 +1,30 @@
 version: "1.0"
 
-linter: jetbrains/qodana-jvm-community:2025.3
-
 profile:
   name: qodana.recommended
 
-failThreshold: 10
+bootstrap: ./mvnw -q -DskipTests compile test-compile
+
+failThreshold: 5
+
+include:
+  - name: Backend source and tests
+    paths:
+      - src/main/java
+      - src/test/java
+      - src/main/resources
+      - pom.xml
 
 exclude:
-  - name: Exclude generated and build files
+  - name: Build and cache artifacts
     paths:
-      - build/
       - target/
-      - node_modules/
+      - build/
       - .git/
-
-disable:
-  - HardcodedPasswords
-  - CsrfProtection
-
-inspections:
-  - group: Security
-    enabled: true
-  - group: Probable bugs
-    enabled: true
-  - group: Java
-    enabled: true
+      - node_modules/
+  - name: Non-JVM app surfaces scanned in separate pipelines
+    paths:
+      - frontend/
+      - load_tests/
+      - diagrams_and_readme/
+      - keys/
