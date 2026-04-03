@@ -29,7 +29,7 @@ const PasswordInput = ({
                 placeholder={placeholder}
                 disabled={disabled}
                 required={required}
-                className={`password-input-field ${hasError ? 'error' : ''}`}
+                className={`auth-input password-input-field ${hasError ? 'error' : ''}`}
             />
             <button
                 type="button"

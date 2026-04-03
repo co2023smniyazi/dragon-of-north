@@ -347,7 +347,7 @@ const AuthPage = () => {
                     </div>
                 )}
 
-                <form onSubmit={checkEmail} className="space-y-3">
+                <form onSubmit={checkEmail} className="auth-form-stack">
                     <label className="auth-label">Email</label>
                     <AuthInput
                         type="email"
@@ -373,7 +373,7 @@ const AuthPage = () => {
                 </form>
 
                 {isPasswordStep && (
-                    <form onSubmit={handleLocalLogin} className="auth-section">
+                    <form onSubmit={handleLocalLogin} className="auth-form-stack">
                         <label className="auth-label block">Password</label>
                         <PasswordInput
                             value={password}
@@ -399,7 +399,7 @@ const AuthPage = () => {
             {showGoogle && (
                 <>
                     <AuthDivider label="or continue with"/>
-                    <div className="auth-section">
+                    <div className="auth-form-stack">
                         {isSignupStep && (
                             <p className="auth-helper">
                                 No account found. Create one with password or continue with Google.
