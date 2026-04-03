@@ -35,9 +35,14 @@ public enum ErrorCode {
 
     USER_NOT_FOUND("USER_001", "user not found", HttpStatus.NOT_FOUND),
     USER_ALREADY_VERIFIED("USER_002", "user is already verified", HttpStatus.CONFLICT),
+    USER_OPERATION_NOT_ALLOWED("USER_003", "Operation %s is not allowed for account status %s", HttpStatus.FORBIDDEN),
+    USER_REACTIVATION_REQUIRED("USER_004", "Account is deleted. Complete verification to reactivate", HttpStatus.FORBIDDEN),
+    USER_BLOCKED("USER_005", "Account is blocked", HttpStatus.LOCKED),
 
     INVALID_INPUT("VAL_001", "invalid input", HttpStatus.BAD_REQUEST),
     EMAIL_NOT_VERIFIED("VAL_002", "email not verified", HttpStatus.UNAUTHORIZED),
+    PHONE_NOT_VERIFIED("VAL_003", "phone not verified", HttpStatus.UNAUTHORIZED),
+    OTP_VERIFICATION_REQUIRED("VAL_004", "Verification required before completing signup", HttpStatus.BAD_REQUEST),
 
     OTP_RATE_LIMIT("OTP_001", "wait %s seconds before requesting another OTP for %s", HttpStatus.TOO_MANY_REQUESTS),
     OTP_TOO_MANY_REQUESTS("OTP_002", "Too many otp requests. Blocked for %s minutes.", HttpStatus.TOO_MANY_REQUESTS),
