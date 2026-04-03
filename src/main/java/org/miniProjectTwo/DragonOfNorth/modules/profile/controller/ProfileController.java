@@ -30,9 +30,24 @@ public class ProfileController {
     private final UserAuthProviderRepository userAuthProviderRepository;
 
     @PatchMapping
-    public ApiResponse<?> updateProfile(@RequestBody UpdateProfileRequest request) {
-        profileService.updateProfile(request.bio(), request.avatarUrl(), request.displayName(), request.username());
-        return ApiResponse.successMessage("profile updated");
+    public ApiResponse<GetProfileResponse> updateProfile(@RequestBody UpdateProfileRequest request) {
+        Profile profile = profileService.updateProfile(
+                request.bio(),
+                request.avatarUrl(),
+                request.displayName(),
+                request.username()
+        );
+        return ApiResponse.success(toResponse(profile, resolveAuthProvider(resolveCurrentUserId())));
+    }
+
+    private GetProfileResponse toResponse(Profile profile, Provider authProvider) {
+        return new GetProfileResponse(
+                profile.getUsername(),
+                profile.getDisplayName(),
+                profile.getBio(),
+                profile.getAvatarUrl(),
+                authProvider
+        );
     }
 
     @GetMapping
@@ -41,13 +56,7 @@ public class ProfileController {
         UUID userId = resolveCurrentUserId();
         Provider authProvider = resolveAuthProvider(userId);
 
-        return ApiResponse.success(new GetProfileResponse(
-                profile.getUsername(),
-                profile.getDisplayName(),
-                profile.getBio(),
-                profile.getAvatarUrl(),
-                authProvider
-        ));
+        return ApiResponse.success(toResponse(profile, authProvider));
     }
 
     private UUID resolveCurrentUserId() {

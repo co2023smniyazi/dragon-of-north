@@ -12,7 +12,7 @@ public interface ProfileService {
 
     void syncGoogleAvatar(UUID userId, OAuthUserInfo userInfo);
 
-    void updateProfile(String bio, String avatarUrl, String displayName, String username);
+    Profile updateProfile(String bio, String avatarUrl, String displayName, String username);
 
     Profile getProfile();
 

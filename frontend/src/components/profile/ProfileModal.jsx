@@ -6,6 +6,7 @@ import ValidationError from '../Validation/ValidationError';
 import {apiService} from '../../services/apiService';
 import {API_CONFIG} from '../../config';
 import {useToast} from '../../hooks/useToast';
+import {useAuth} from '../../context/authUtils';
 
 const EMPTY_PROFILE = {
     username: '',
@@ -55,6 +56,7 @@ const getResponseData = (result) => {
 
 const ProfileModal = ({isOpen, onClose, onProfileUpdated}) => {
     const {toast} = useToast();
+    const {user, patchUser, syncUserProfile} = useAuth();
     const [loadingProfile, setLoadingProfile] = useState(false);
     const [isProfileSubmitting, setIsProfileSubmitting] = useState(false);
     const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
@@ -192,11 +194,26 @@ const ProfileModal = ({isOpen, onClose, onProfileUpdated}) => {
             return;
         }
 
+        const previousProfile = initialProfile;
+        const optimisticProfile = {
+            ...initialProfile,
+            username: profileForm.username,
+            displayName: profileForm.displayName,
+            bio: profileForm.bio,
+        };
         setProfileErrors(EMPTY_PROFILE_ERRORS);
         setIsProfileSubmitting(true);
+        setInitialProfile(optimisticProfile);
+        setProfileForm(optimisticProfile);
+        patchUser(optimisticProfile);
+        onProfileUpdated?.(optimisticProfile);
 
         const result = await apiService.patch(API_CONFIG.ENDPOINTS.PROFILE, profileUpdatePayload);
         if (apiService.isErrorResponse(result)) {
+            setInitialProfile(previousProfile);
+            setProfileForm(previousProfile);
+            patchUser(previousProfile);
+            onProfileUpdated?.(previousProfile);
             const consumed = setInlineErrorByCode(result, 'profile');
             if (!consumed) {
                 toast.error(result.backendMessage || result.message || 'Unable to update profile.');
@@ -205,10 +222,25 @@ const ProfileModal = ({isOpen, onClose, onProfileUpdated}) => {
             return;
         }
 
-        const serverPayload = normalizeProfile(getResponseData(result) || profileForm);
-        setInitialProfile(serverPayload);
-        setProfileForm(serverPayload);
-        onProfileUpdated?.(serverPayload);
+        const responseData = getResponseData(result);
+        let nextProfile = optimisticProfile;
+
+        if (responseData) {
+            nextProfile = normalizeProfile(responseData);
+        } else {
+            const freshUser = await syncUserProfile({
+                ...user,
+                ...optimisticProfile,
+            });
+            if (freshUser) {
+                nextProfile = normalizeProfile(freshUser);
+            }
+        }
+
+        setInitialProfile(nextProfile);
+        setProfileForm(nextProfile);
+        patchUser(nextProfile);
+        onProfileUpdated?.(nextProfile);
         toast.success('Profile updated successfully.');
         setIsProfileSubmitting(false);
     };

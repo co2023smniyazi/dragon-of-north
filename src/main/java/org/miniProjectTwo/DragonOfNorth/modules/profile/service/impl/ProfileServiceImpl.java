@@ -88,7 +88,7 @@ public class ProfileServiceImpl implements org.miniProjectTwo.DragonOfNorth.modu
 
     @Override
     @Transactional
-    public void updateProfile(String bio, String avatarUrl, String displayName, String username) {
+    public Profile updateProfile(String bio, String avatarUrl, String displayName, String username) {
         AppUser appUser = findAuthenticatedUser(UserLifecycleOperation.PROFILE_UPDATE);
         UUID userId = appUser.getId();
         Profile profile = getOrCreateProfile(userId);
@@ -105,7 +105,7 @@ public class ProfileServiceImpl implements org.miniProjectTwo.DragonOfNorth.modu
             applyUserAvatarUpdate(profile, avatarUrl);
         }
         updateIfNotNull(displayName, profile::setDisplayName);
-
+        return profile;
     }
 
     @Override

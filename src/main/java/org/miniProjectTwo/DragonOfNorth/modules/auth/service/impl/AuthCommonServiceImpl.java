@@ -165,6 +165,7 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
         userStateValidator.validate(appUser, UserLifecycleOperation.PASSWORD_CHANGE);
         ensureLocalPasswordChangeAllowed(appUser);
         ensureOldPasswordMatches(request.oldPassword(), appUser);
+        ensureNewPasswordIsDifferent(request.oldPassword(), request.newPassword());
         updatePassword(appUser, request.newPassword());
         appUserRepository.save(appUser);
         sessionService.revokeAllSessionsByUserId(appUser.getId());
@@ -191,7 +192,13 @@ public class AuthCommonServiceImpl implements AuthCommonServices {
 
     private void ensureOldPasswordMatches(String oldPassword, AppUser appUser) {
         if (!passwordEncoder.matches(oldPassword, appUser.getPassword())) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT, "Old password is incorrect");
+            throw new BusinessException(ErrorCode.INVALID_CURRENT_PASSWORD, "Current password is incorrect");
+        }
+    }
+
+    private void ensureNewPasswordIsDifferent(String oldPassword, String newPassword) {
+        if (oldPassword != null && oldPassword.equals(newPassword)) {
+            throw new BusinessException(ErrorCode.SAME_PASSWORD, "New password must be different from current password");
         }
     }
 

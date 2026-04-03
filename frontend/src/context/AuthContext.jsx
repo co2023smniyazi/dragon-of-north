@@ -39,7 +39,23 @@ export const AuthProvider = ({children}) => {
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
 
-    const hydrateUserProfile = useCallback(async (baseUser = null) => {
+    const persistUserState = useCallback((nextUser) => {
+        if (!nextUser) {
+            localStorage.removeItem('user');
+            return null;
+        }
+
+        const normalizedUser = normalizeUserPayload(nextUser);
+        setUser(normalizedUser);
+        localStorage.setItem('user', JSON.stringify(normalizedUser));
+        if (normalizedUser?.identifier) {
+            localStorage.setItem(IDENTIFIER_HINT_KEY, normalizedUser.identifier);
+        }
+
+        return normalizedUser;
+    }, []);
+
+    const syncUserProfile = useCallback(async (baseUser = null) => {
         const profileResult = await apiService.get(API_CONFIG.ENDPOINTS.PROFILE);
         if (apiService.isErrorResponse(profileResult)) {
             return baseUser;
@@ -55,14 +71,8 @@ export const AuthProvider = ({children}) => {
             ...profilePayload,
         });
 
-        setUser(mergedUser);
-        localStorage.setItem('user', JSON.stringify(mergedUser));
-        if (mergedUser?.identifier) {
-            localStorage.setItem(IDENTIFIER_HINT_KEY, mergedUser.identifier);
-        }
-
-        return mergedUser;
-    }, []);
+        return persistUserState(mergedUser);
+    }, [persistUserState]);
 
     const checkAuthStatus = useCallback(async () => {
         try {
@@ -102,7 +112,7 @@ export const AuthProvider = ({children}) => {
             if (!apiService.isErrorResponse(sessionResult) && Array.isArray(sessionResult?.data)) {
                 setIsAuthenticated(true);
                 localStorage.setItem('isAuthenticated', 'true');
-                await hydrateUserProfile(hydratedUser);
+                await syncUserProfile(hydratedUser);
                 return;
             }
 
@@ -119,7 +129,7 @@ export const AuthProvider = ({children}) => {
         } finally {
             setIsLoading(false);
         }
-    }, [hydrateUserProfile]);
+    }, [syncUserProfile]);
 
     useEffect(() => {
         void checkAuthStatus();
@@ -141,8 +151,8 @@ export const AuthProvider = ({children}) => {
             }
         }
 
-        void hydrateUserProfile(resolvedUser);
-    }, [hydrateUserProfile]);
+        void syncUserProfile(resolvedUser);
+    }, [syncUserProfile]);
 
     const logout = useCallback(async () => {
         try {
@@ -186,7 +196,9 @@ export const AuthProvider = ({children}) => {
         logout,
         checkAuthStatus,
         patchUser,
-    }), [isAuthenticated, isLoading, user, login, logout, checkAuthStatus, patchUser]);
+        syncUserProfile,
+        persistUserState,
+    }), [isAuthenticated, isLoading, user, login, logout, checkAuthStatus, patchUser, syncUserProfile, persistUserState]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

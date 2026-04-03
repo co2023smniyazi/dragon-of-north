@@ -19,7 +19,7 @@ const EMPTY_PASSWORD_ERRORS = {
     confirmPassword: [],
 };
 
-const MIN_PASSWORD_LENGTH = 8;
+const PASSWORD_COMPLEXITY_MESSAGE = 'Password must be at least 8 characters with letters and numbers';
 
 const SecuritySection = ({authProvider}) => {
     const {toast} = useToast();
@@ -35,13 +35,44 @@ const SecuritySection = ({authProvider}) => {
         setPasswordErrors(EMPTY_PASSWORD_ERRORS);
     };
 
+    const clearPasswordFieldErrors = (field) => {
+        setPasswordErrors((prev) => {
+            const nextErrors = {
+                ...prev,
+                [field]: [],
+            };
+
+            if (field === 'newPassword' || field === 'confirmPassword') {
+                nextErrors.confirmPassword = [];
+                if (field === 'newPassword') {
+                    nextErrors.newPassword = [];
+                }
+            }
+
+            if (field === 'currentPassword') {
+                nextErrors.currentPassword = [];
+            }
+
+            return nextErrors;
+        });
+    };
+
+    const updatePasswordField = (field, value) => {
+        setPasswordForm((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+        clearPasswordFieldErrors(field);
+    };
+
     const setInlineErrorByCode = (result) => {
         const errorCode = result?.errorCode || result?.raw?.code;
+        const backendMessage = result.backendMessage || result.message;
 
         if (errorCode === 'PASSWORD_MISMATCH') {
             setPasswordErrors((prev) => ({
                 ...prev,
-                confirmPassword: [result.backendMessage || result.message || 'Passwords do not match.'],
+                confirmPassword: [backendMessage || 'New password and confirm password do not match'],
             }));
             return true;
         }
@@ -49,9 +80,44 @@ const SecuritySection = ({authProvider}) => {
         if (errorCode === 'INVALID_CURRENT_PASSWORD') {
             setPasswordErrors((prev) => ({
                 ...prev,
-                currentPassword: [result.backendMessage || result.message || 'Current password is incorrect.'],
+                currentPassword: [backendMessage || 'Current password is incorrect'],
             }));
             return true;
+        }
+
+        if (errorCode === 'WEAK_PASSWORD') {
+            setPasswordErrors((prev) => ({
+                ...prev,
+                newPassword: [backendMessage || PASSWORD_COMPLEXITY_MESSAGE],
+            }));
+            return true;
+        }
+
+        if (errorCode === 'SAME_PASSWORD') {
+            setPasswordErrors((prev) => ({
+                ...prev,
+                newPassword: [backendMessage || 'New password must be different from current password'],
+            }));
+            return true;
+        }
+
+        if (result?.fieldErrors?.length) {
+            const nextErrors = {
+                currentPassword: [],
+                newPassword: [],
+                confirmPassword: [],
+            };
+
+            result.fieldErrors.forEach((error) => {
+                if (error.field === 'newPassword') {
+                    nextErrors.newPassword.push(error.message || PASSWORD_COMPLEXITY_MESSAGE);
+                }
+            });
+
+            if (nextErrors.currentPassword.length || nextErrors.newPassword.length || nextErrors.confirmPassword.length) {
+                setPasswordErrors(nextErrors);
+                return true;
+            }
         }
 
         return false;
@@ -70,8 +136,8 @@ const SecuritySection = ({authProvider}) => {
 
         if (!passwordForm.newPassword) {
             nextErrors.newPassword.push('New password is required.');
-        } else if (passwordForm.newPassword.length < MIN_PASSWORD_LENGTH) {
-            nextErrors.newPassword.push(`New password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+        } else if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(passwordForm.newPassword)) {
+            nextErrors.newPassword.push(PASSWORD_COMPLEXITY_MESSAGE);
         }
 
         if (!passwordForm.confirmPassword) {
@@ -79,7 +145,11 @@ const SecuritySection = ({authProvider}) => {
         }
 
         if (passwordForm.newPassword && passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword) {
-            nextErrors.confirmPassword.push('New password and confirm password must match.');
+            nextErrors.confirmPassword.push('New password and confirm password do not match');
+        }
+
+        if (passwordForm.currentPassword && passwordForm.newPassword && passwordForm.currentPassword === passwordForm.newPassword) {
+            nextErrors.newPassword.push('New password must be different from current password');
         }
 
         setPasswordErrors(nextErrors);
@@ -116,19 +186,24 @@ const SecuritySection = ({authProvider}) => {
                 return;
             }
 
+            resetPasswordForm();
             toast.success('Password updated successfully.');
         } finally {
-            // Clear sensitive fields immediately after request completion.
-            resetPasswordForm();
             setIsSubmitting(false);
         }
     };
 
     return (
-        <section className="group rounded-2xl border border-slate-200/80 bg-slate-50/80 p-6 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/70">
+        <section
+            className="group rounded-3xl border border-slate-200/80 bg-[rgba(255,255,255,0.86)] p-6 shadow-[0_18px_36px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_44px_rgba(15,23,42,0.12)] dark:border-slate-800/80 dark:bg-[rgba(11,18,32,0.92)]">
             <div className="mb-4 space-y-3">
                 <div className="flex items-center gap-3">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    <span
+                        className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border text-xs font-semibold shadow-sm ${
+                            canChangePassword
+                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300'
+                                : 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/25 dark:bg-orange-500/10 dark:text-orange-300'
+                        }`}>
                         {normalizedAuthProvider === 'GOOGLE' ? 'G' : '🔒'}
                     </span>
                     <div>
@@ -138,7 +213,11 @@ const SecuritySection = ({authProvider}) => {
                         </p>
                     </div>
                 </div>
-                <div className="rounded-xl border border-slate-200/80 bg-white/70 px-3 py-2 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-300">
+                <div className={`rounded-2xl border px-4 py-3 text-sm shadow-sm ${
+                    canChangePassword
+                        ? 'border-teal-200/80 bg-teal-50/70 text-slate-700 dark:border-teal-500/25 dark:bg-teal-500/10 dark:text-slate-200'
+                        : 'border-orange-200/80 bg-orange-50/80 text-slate-700 dark:border-orange-500/25 dark:bg-orange-500/10 dark:text-slate-200'
+                }`}>
                     <p>{canChangePassword ? 'Password is managed in this account.' : 'Password managed by Google.'}</p>
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Enable MFA (coming soon) · Add backup authentication (coming soon)</p>
                 </div>
@@ -164,11 +243,9 @@ const SecuritySection = ({authProvider}) => {
                         id="currentPassword"
                         name="currentPassword"
                         value={passwordForm.currentPassword}
-                        onChange={(event) => setPasswordForm((prev) => ({
-                            ...prev,
-                            currentPassword: event.target.value
-                        }))}
+                        onChange={(event) => updatePasswordField('currentPassword', event.target.value)}
                         hasError={Boolean(passwordErrors.currentPassword.length)}
+                        className="border-slate-200 bg-white/90 focus:border-[#14B8A6] focus:ring-4 focus:ring-teal-500/15 dark:border-slate-700 dark:bg-slate-950/60 dark:focus:border-[#14B8A6] dark:focus:ring-teal-400/10"
                         placeholder="Current password"
                         autoComplete="current-password"
                     />
@@ -181,8 +258,9 @@ const SecuritySection = ({authProvider}) => {
                         id="newPassword"
                         name="newPassword"
                         value={passwordForm.newPassword}
-                        onChange={(event) => setPasswordForm((prev) => ({...prev, newPassword: event.target.value}))}
+                        onChange={(event) => updatePasswordField('newPassword', event.target.value)}
                         hasError={Boolean(passwordErrors.newPassword.length)}
+                        className="border-slate-200 bg-white/90 focus:border-[#14B8A6] focus:ring-4 focus:ring-teal-500/15 dark:border-slate-700 dark:bg-slate-950/60 dark:focus:border-[#14B8A6] dark:focus:ring-teal-400/10"
                         placeholder="New password"
                         autoComplete="new-password"
                     />
@@ -195,18 +273,20 @@ const SecuritySection = ({authProvider}) => {
                         id="confirmPassword"
                         name="confirmPassword"
                         value={passwordForm.confirmPassword}
-                        onChange={(event) => setPasswordForm((prev) => ({
-                            ...prev,
-                            confirmPassword: event.target.value
-                        }))}
+                        onChange={(event) => updatePasswordField('confirmPassword', event.target.value)}
                         hasError={Boolean(passwordErrors.confirmPassword.length)}
+                        className="border-slate-200 bg-white/90 focus:border-[#14B8A6] focus:ring-4 focus:ring-teal-500/15 dark:border-slate-700 dark:bg-slate-950/60 dark:focus:border-[#14B8A6] dark:focus:ring-teal-400/10"
                         placeholder="Confirm password"
                         autoComplete="new-password"
                     />
                     <ValidationError errors={passwordErrors.confirmPassword}/>
                 </div>
 
-                <AuthButton type="submit" disabled={isSubmitting}>
+                    <AuthButton
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="h-11 rounded-2xl border-0 bg-[linear-gradient(135deg,#14B8A6,#0EA5E9)] px-4 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(20,184,166,0.24)] transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_34px_rgba(20,184,166,0.32)] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
                     {isSubmitting ? (
                         <span className="btn-loading-indicator">
                             <span className="spinner spinner-sm"></span>

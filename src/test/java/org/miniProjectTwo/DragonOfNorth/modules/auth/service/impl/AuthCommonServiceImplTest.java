@@ -204,4 +204,52 @@ class AuthCommonServiceImplTest {
         verify(appUserRepository, never()).save(any());
         verify(sessionService, never()).revokeAllSessionsByUserId(any());
     }
+
+    @Test
+    void changePassword_shouldRejectIncorrectCurrentPassword() {
+        UUID userId = UUID.randomUUID();
+        AppUser user = new AppUser();
+        user.setId(userId);
+        user.setPassword("encoded-password");
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new UsernamePasswordAuthenticationToken(userId, null, Set.of()));
+        SecurityContextHolder.setContext(context);
+
+        when(appUserRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userAuthProviderRepository.existsByUserIdAndProvider(userId, Provider.LOCAL)).thenReturn(true);
+        when(passwordEncoder.matches("Wrong@123", "encoded-password")).thenReturn(false);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> authCommonService.changePassword(new PasswordChangeRequest("Wrong@123", "New@12345")));
+
+        assertEquals(ErrorCode.INVALID_CURRENT_PASSWORD, exception.getErrorCode());
+        assertEquals("Current password is incorrect", exception.getMessage());
+        verify(appUserRepository, never()).save(any());
+        verify(sessionService, never()).revokeAllSessionsByUserId(any());
+    }
+
+    @Test
+    void changePassword_shouldRejectSamePasswordAsCurrentPassword() {
+        UUID userId = UUID.randomUUID();
+        AppUser user = new AppUser();
+        user.setId(userId);
+        user.setPassword("encoded-password");
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new UsernamePasswordAuthenticationToken(userId, null, Set.of()));
+        SecurityContextHolder.setContext(context);
+
+        when(appUserRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(userAuthProviderRepository.existsByUserIdAndProvider(userId, Provider.LOCAL)).thenReturn(true);
+        when(passwordEncoder.matches("Same@1234", "encoded-password")).thenReturn(true);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> authCommonService.changePassword(new PasswordChangeRequest("Same@1234", "Same@1234")));
+
+        assertEquals(ErrorCode.SAME_PASSWORD, exception.getErrorCode());
+        assertEquals("New password must be different from current password", exception.getMessage());
+        verify(appUserRepository, never()).save(any());
+        verify(sessionService, never()).revokeAllSessionsByUserId(any());
+    }
 }

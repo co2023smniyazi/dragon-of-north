@@ -81,9 +81,16 @@ const PROFILE_PATCH_FIELD_MAP = {
     avatarUrl: 'avatar_url',
 };
 
+const buildOptimisticProfile = (initialProfile, profileForm) => ({
+    ...initialProfile,
+    username: profileForm.username,
+    displayName: profileForm.displayName,
+    bio: profileForm.bio,
+});
+
 const ProfilePage = () => {
     const navigate = useNavigate();
-    const {user, patchUser} = useAuth();
+    const {user, patchUser, syncUserProfile} = useAuth();
     const {toast} = useToast();
 
     const [loadingProfile, setLoadingProfile] = useState(true);
@@ -95,7 +102,6 @@ const ProfilePage = () => {
 
     const [activeSessionsCount, setActiveSessionsCount] = useState(0);
     const [lastLoginAt, setLastLoginAt] = useState('—');
-    const [lastLoginTimestamp, setLastLoginTimestamp] = useState(null);
     const cachedProfileRef = useRef(buildProfileFromUser(user));
 
     const applyProfileLocally = useCallback((profilePayload) => {
@@ -159,7 +165,6 @@ const ProfilePage = () => {
             const lastSeen = sortedByLastSeen[0]?.last_used_at || sortedByLastSeen[0]?.created_at;
 
             setActiveSessionsCount(activeSessions.length);
-            setLastLoginTimestamp(lastSeen ? new Date(lastSeen).getTime() : null);
             setLastLoginAt(formatDateTime(lastSeen));
         };
 
@@ -213,21 +218,6 @@ const ProfilePage = () => {
         return false;
     };
 
-    const lastLoginRelative = useMemo(() => {
-        if (!lastLoginTimestamp || !Number.isFinite(lastLoginTimestamp)) {
-            return '—';
-        }
-
-        const diffSeconds = Math.max(0, Math.floor((Date.now() - lastLoginTimestamp) / 1000));
-        if (diffSeconds < 60) return `${diffSeconds}s ago`;
-        const diffMinutes = Math.floor(diffSeconds / 60);
-        if (diffMinutes < 60) return `${diffMinutes} min ago`;
-        const diffHours = Math.floor(diffMinutes / 60);
-        if (diffHours < 24) return `${diffHours}h ago`;
-        const diffDays = Math.floor(diffHours / 24);
-        return `${diffDays}d ago`;
-    }, [lastLoginTimestamp]);
-
     const cancelProfileEdit = () => {
         setProfileForm(initialProfile);
         setProfileErrors(EMPTY_PROFILE_ERRORS);
@@ -240,11 +230,15 @@ const ProfilePage = () => {
             return;
         }
 
+        const previousProfile = initialProfile;
+        const optimisticProfile = buildOptimisticProfile(initialProfile, profileForm);
         setProfileErrors(EMPTY_PROFILE_ERRORS);
         setIsProfileSubmitting(true);
+        applyProfileLocally(optimisticProfile);
 
         const result = await apiService.patch(API_CONFIG.ENDPOINTS.PROFILE, profileUpdatePayload);
         if (apiService.isErrorResponse(result)) {
+            applyProfileLocally(previousProfile);
             const consumed = setInlineErrorByCode(result);
             if (!consumed) {
                 toast.error(result.backendMessage || result.message || 'Unable to update profile.');
@@ -253,15 +247,28 @@ const ProfilePage = () => {
             return;
         }
 
-        const serverPayload = normalizeProfile(getResponseData(result) || profileForm);
-        applyProfileLocally(serverPayload);
+        const responseData = getResponseData(result);
+        if (responseData) {
+            applyProfileLocally(normalizeProfile(responseData));
+        } else {
+            const freshUser = await syncUserProfile({
+                ...user,
+                ...optimisticProfile,
+            });
+
+            if (freshUser) {
+                applyProfileLocally(normalizeProfile(freshUser));
+            }
+        }
+
         toast.success('Profile updated successfully.');
         setIsEditingProfile(false);
         setIsProfileSubmitting(false);
     };
 
     return (
-        <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+        <div
+            className="mx-auto w-full max-w-6xl space-y-6 bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.08),transparent_32%),linear-gradient(180deg,rgba(248,250,252,0.96),rgba(248,250,252,1))] px-4 py-6 dark:bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.10),transparent_28%),linear-gradient(180deg,#0B1220,#0F172A)] sm:px-6 lg:px-8">
             <ProfileHeader
                 avatarSrc={avatarSrc}
                 displayName={profileForm.displayName || user?.displayName || 'User'}
@@ -270,7 +277,6 @@ const ProfilePage = () => {
                 bio={profileForm.bio}
                 activeSessions={activeSessionsCount}
                 lastLoginAt={lastLoginAt}
-                lastLoginRelative={lastLoginRelative}
                 onManageSessions={() => navigate('/sessions')}
             />
 
@@ -293,7 +299,8 @@ const ProfilePage = () => {
                 <SecuritySection authProvider={profileForm.authProvider || user?.authProvider || user?.auth_provider}/>
             </div>
 
-            <section className="group rounded-2xl border border-slate-200/80 bg-slate-50/80 p-6 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/70">
+            <section
+                className="group rounded-3xl border border-slate-200/80 bg-[rgba(255,255,255,0.86)] p-6 shadow-[0_18px_36px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_44px_rgba(20,184,166,0.12)] dark:border-slate-800/80 dark:bg-[rgba(11,18,32,0.92)]">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Session summary / activity</h2>
@@ -301,16 +308,19 @@ const ProfilePage = () => {
                             You currently have {activeSessionsCount} active session{activeSessionsCount === 1 ? '' : 's'}.
                         </p>
                     </div>
-                    <div className="rounded-xl border border-slate-200/80 bg-white/70 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/70">
-                        <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">Current device</p>
+                    <div
+                        className="rounded-2xl border border-emerald-200/80 bg-white/80 px-4 py-3 shadow-sm dark:border-emerald-500/25 dark:bg-slate-900/75">
+                        <p className="text-xs uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">Current
+                            device</p>
                         <p className="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-100">Desktop browser</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">Last activity: {lastLoginRelative}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Last
+                            activity: {lastLoginAt || '—'}</p>
                     </div>
                 </div>
                 <button
                     type="button"
                     onClick={() => navigate('/sessions')}
-                    className="mt-4 h-10 rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 transition-all hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                    className="mt-4 h-11 rounded-2xl border border-teal-400/60 bg-[linear-gradient(135deg,#14B8A6,#0EA5E9)] px-4 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(20,184,166,0.24)] transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_34px_rgba(20,184,166,0.32)] focus:outline-none focus:ring-2 focus:ring-teal-400/50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-400/30"
                 >
                     View all sessions
                 </button>

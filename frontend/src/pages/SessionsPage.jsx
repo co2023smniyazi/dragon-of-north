@@ -44,8 +44,6 @@ const SessionsPage = () => {
     const [revokingOthers, setRevokingOthers] = useState(false);
     const [showRevoked, setShowRevoked] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
-    const [lastUpdatedLabel, setLastUpdatedLabel] = useState('Never');
     const [refreshHighlight, setRefreshHighlight] = useState(false);
 
     const currentDeviceId = getDeviceId();
@@ -102,7 +100,6 @@ const SessionsPage = () => {
 
         if (result?.api_response_status === 'success' && Array.isArray(result?.data)) {
             setSessions(result.data);
-            setLastUpdatedAt(Date.now());
             if (withAnimation) {
                 setRefreshHighlight(true);
                 window.setTimeout(() => setRefreshHighlight(false), 700);
@@ -115,28 +112,6 @@ const SessionsPage = () => {
         setRefreshSpinning(false);
         setIsLoading(false);
     }, [isAuthenticated, toast]);
-
-    useEffect(() => {
-        if (!lastUpdatedAt) {
-            setLastUpdatedLabel('Never');
-            return;
-        }
-
-        const updateLabel = () => {
-            const elapsedSeconds = Math.max(0, Math.floor((Date.now() - lastUpdatedAt) / 1000));
-            if (elapsedSeconds < 60) {
-                setLastUpdatedLabel(`${elapsedSeconds}s ago`);
-                return;
-            }
-
-            const elapsedMinutes = Math.floor(elapsedSeconds / 60);
-            setLastUpdatedLabel(`${elapsedMinutes}m ago`);
-        };
-
-        updateLabel();
-        const intervalId = window.setInterval(updateLabel, 1000);
-        return () => window.clearInterval(intervalId);
-    }, [lastUpdatedAt]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -271,20 +246,19 @@ const SessionsPage = () => {
                             <p className="scc-hero__subtitle">Device management & activity overview</p>
                         </div>
                         <div className="scc-hero__actions">
-                            <div className="scc-refresh-meta">
-                                <button
-                                    type="button"
-                                    onClick={() => loadSessions(true)}
-                                    disabled={!isAuthenticated || refreshSpinning || loadingSessions}
-                                    className="scc-refresh-btn"
-                                    aria-label="Refresh sessions"
-                                    title="Refresh sessions"
-                                >
-                                    <span className={refreshSpinning || loadingSessions ? 'db-spin' : ''} aria-hidden>↻</span>
-                                    <span>Refresh</span>
-                                </button>
-                                <small className="scc-last-updated">Last updated: {lastUpdatedLabel}</small>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => loadSessions(true)}
+                                disabled={!isAuthenticated || refreshSpinning || loadingSessions}
+                                className={`scc-refresh-btn ${refreshSpinning || loadingSessions ? 'is-loading' : ''}`}
+                                aria-label="Refresh sessions"
+                                title="Refresh sessions"
+                            >
+                                <span className={`scc-refresh-icon ${refreshSpinning || loadingSessions ? 'spin' : ''}`}
+                                      aria-hidden>
+                                    ↻
+                                </span>
+                            </button>
                             <button
                                 type="button"
                                 onClick={revokeOthers}
