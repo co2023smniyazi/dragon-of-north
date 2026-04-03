@@ -2916,23 +2916,30 @@ a:hover {
         border: 1px solid #e5e7eb;
         background: #ffffff;
         color: var(--don-text-primary);
-        font-size: 13px;
-        font-weight: 600;
-        display: inline-flex;
+        display: flex;
         align-items: center;
         justify-content: center;
+        object-fit: cover;
         text-transform: uppercase;
     }
 
     .dashboard-avatar-btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: none;
+        border-radius: 9999px;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
-        transition: all 200ms ease-out;
+        transition: transform 180ms ease, opacity 180ms ease;
     }
 
     .dashboard-avatar-btn:hover {
-        transform: translateY(-1px) scale(1.03);
-        border-color: rgba(139, 92, 246, 0.3);
-        box-shadow: 0 0 12px rgba(139, 92, 246, 0.15);
+        transform: translateY(-1px);
+        opacity: 0.96;
     }
 
     .dark .dashboard-avatar {
@@ -2941,8 +2948,7 @@ a:hover {
     }
 
     .dark .dashboard-avatar-btn:hover {
-        border-color: rgba(139, 92, 246, 0.3);
-        box-shadow: 0 0 16px rgba(139, 92, 246, 0.15);
+        opacity: 0.96;
     }
 
     .profile-menu {
