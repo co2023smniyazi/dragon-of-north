@@ -7,7 +7,7 @@ import {API_CONFIG} from '../config';
 import {formatDateTime} from '../components/sessions/sessionFormatters';
 import ProfileHeader from '../components/profile/ProfileHeader.jsx';
 import ProfileInfoSection from '../components/profile/ProfileInfoSection.jsx';
-import SecuritySection from '../components/profile/SecuritySection.jsx';
+import ProfileSettings from '../components/profile/ProfileSettings.jsx';
 
 const EMPTY_PROFILE = {
     username: '',
@@ -296,7 +296,7 @@ const ProfilePage = () => {
                     onSubmit={submitProfile}
                 />
 
-                <SecuritySection authProvider={profileForm.authProvider || user?.authProvider || user?.auth_provider}/>
+                <ProfileSettings authProvider={profileForm.authProvider || user?.authProvider || user?.auth_provider}/>
             </div>
 
             <section

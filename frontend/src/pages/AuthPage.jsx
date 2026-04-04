@@ -141,6 +141,43 @@ const AuthPage = () => {
 
         const data = result.data || {};
 
+        const status = String(data?.status || data?.app_user_status || '').toUpperCase();
+        if (status === 'DELETED') {
+            navigate('/signup', {
+                replace: true,
+                state: {
+                    reason: 'deleted',
+                    identifier: normalizedEmail,
+                    identifierType: 'EMAIL',
+                },
+            });
+            return;
+        }
+
+        if (status === 'INACTIVE') {
+            navigate('/signup', {
+                replace: true,
+                state: {
+                    reason: 'inactive',
+                    identifier: normalizedEmail,
+                    identifierType: 'EMAIL',
+                },
+            });
+            return;
+        }
+
+        if (data?.exists === false) {
+            navigate('/signup', {
+                replace: true,
+                state: {
+                    reason: 'inactive',
+                    identifier: normalizedEmail,
+                    identifierType: 'EMAIL',
+                },
+            });
+            return;
+        }
+
         // Smooth transition to password step
         setTimeout(() => {
             moveToStepFromProviders({
@@ -432,3 +469,4 @@ const AuthPage = () => {
 };
 
 export default AuthPage;
+

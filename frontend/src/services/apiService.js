@@ -4,6 +4,7 @@ import {mapErrorCodeToMessage} from '../utils/errorMapper';
 import {exponentialBackoffDelay, shouldRetryRequest, wait} from '../utils/networkUtils';
 import {ensureCsrfHeader} from '../utils/csrf';
 import {clearAccessToken, extractAccessToken, getAccessToken, setAccessToken} from './tokenStore';
+import {clearAuthClientState, extractUserStatus, isDeletedUserStatus} from './authSession';
 
 const AUTO_REFRESH_EXCLUDED_ENDPOINTS = new Set([
     API_CONFIG.ENDPOINTS.LOGIN,
@@ -20,6 +21,15 @@ class ApiService {
         this.rateLimitListeners = [];
         this.isRefreshing = false;
         this.refreshPromise = null;
+        this.authFailureListeners = [];
+        this.authFailureInProgress = false;
+    }
+
+    onAuthFailure(callback) {
+        this.authFailureListeners.push(callback);
+        return () => {
+            this.authFailureListeners = this.authFailureListeners.filter((listener) => listener !== callback);
+        };
     }
 
     onRateLimitUpdate(callback) {
@@ -31,6 +41,35 @@ class ApiService {
 
     notifyRateLimitUpdate() {
         this.rateLimitListeners.forEach(callback => callback(this.rateLimitInfo));
+    }
+
+    isDeletedStatusPayload(payload) {
+        return isDeletedUserStatus(extractUserStatus(payload));
+    }
+
+    notifyAuthFailure(reason, payload = null) {
+        if (this.authFailureInProgress) {
+            return;
+        }
+
+        this.authFailureInProgress = true;
+        clearAuthClientState();
+
+        if (this.authFailureListeners.length > 0) {
+            this.authFailureListeners.forEach((listener) => {
+                try {
+                    listener({reason, payload});
+                } catch (listenerError) {
+                    console.error('Auth failure listener error:', listenerError);
+                }
+            });
+        } else if (typeof window !== 'undefined') {
+            window.location.assign('/signup');
+        }
+
+        setTimeout(() => {
+            this.authFailureInProgress = false;
+        }, 0);
     }
 
     extractRateLimitHeaders(response) {
@@ -188,6 +227,14 @@ class ApiService {
             if (!response.ok) {
                 const normalizedError = this.normalizeApiError(data, 'An error occurred');
 
+                if (response.status === 401) {
+                    this.notifyAuthFailure('UNAUTHORIZED', data);
+                }
+
+                if (this.isDeletedStatusPayload(data)) {
+                    this.notifyAuthFailure('DELETED', data);
+                }
+
                 if (response.status === 429) {
                     return {
                         type: 'RATE_LIMIT_EXCEEDED',
@@ -232,6 +279,17 @@ class ApiService {
                     type: 'API_ERROR',
                     status: response.status,
                     ...normalizedError,
+                    data,
+                };
+            }
+
+            if (this.isDeletedStatusPayload(data)) {
+                this.notifyAuthFailure('DELETED', data);
+                return {
+                    type: 'API_ERROR',
+                    status: 401,
+                    errorCode: 'ACCOUNT_DELETED',
+                    message: 'Your account has been deleted. Please sign up again to continue.',
                     data,
                 };
             }
