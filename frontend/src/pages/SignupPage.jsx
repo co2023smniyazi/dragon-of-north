@@ -40,42 +40,22 @@ const SignupPage = () => {
     const [fieldErrors, setFieldErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
-    const reason = useMemo(() => {
-        const stateReason = location.state?.reason;
-        const queryReason = new URLSearchParams(location.search).get('reason');
-        return stateReason || queryReason;
-    }, [location.search, location.state]);
+    const reason = location.state?.reason;
 
     const banner = useMemo(() => {
-        if (reason === 'deleted') {
-            return {type: 'error', message: 'User was deleted. Please sign up again to reactivate.'};
-        }
-
-        if (reason === 'inactive') {
-            return {type: 'info', message: 'User not found. Please sign up.'};
+        if (reason === 'USER_NOT_FOUND') {
+            return {type: 'info', message: 'User does not exist. Please sign up.'};
         }
 
         return null;
     }, [reason]);
 
     useEffect(() => {
-        if (!reason) {
-            return;
+        if (reason === 'USER_NOT_FOUND') {
+            toast.info('User does not exist. Please sign up.');
+            window.history.replaceState({}, document.title);
         }
-
-        const params = new URLSearchParams(location.search);
-        params.delete('reason');
-        const nextState = {...(location.state || {})};
-        delete nextState.reason;
-
-        navigate({
-            pathname: location.pathname,
-            search: params.toString() ? `?${params.toString()}` : '',
-        }, {
-            replace: true,
-            state: Object.keys(nextState).length ? nextState : null,
-        });
-    }, [location.pathname, location.search, location.state, navigate, reason]);
+    }, [reason, toast]);
 
     useEffect(() => {
         if (!isLoading && isAuthenticated) {

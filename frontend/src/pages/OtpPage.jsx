@@ -29,6 +29,7 @@ const OtpPage = () => {
     const identifier = location.state?.identifier || sessionStorage.getItem(OTP_SESSION_KEYS.IDENTIFIER);
     const identifierType = location.state?.identifierType || sessionStorage.getItem(OTP_SESSION_KEYS.IDENTIFIER_TYPE);
     const resolvedFlow = location.state?.flow || sessionStorage.getItem(OTP_SESSION_KEYS.FLOW) || OTP_FLOW.SIGNUP;
+    const reason = location.state?.reason;
     const isLoginUnverifiedFlow = resolvedFlow === OTP_FLOW.LOGIN_UNVERIFIED;
 
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -51,6 +52,13 @@ const OtpPage = () => {
         sessionStorage.setItem(OTP_SESSION_KEYS.IDENTIFIER_TYPE, identifierType);
         sessionStorage.setItem(OTP_SESSION_KEYS.FLOW, resolvedFlow);
     }, [identifier, identifierType, resolvedFlow]);
+
+    useEffect(() => {
+        if (reason === 'EMAIL_NOT_VERIFIED') {
+            toast.info('Email not verified. Please verify your email.');
+            window.history.replaceState({}, document.title);
+        }
+    }, [reason, toast]);
 
     const clearOtpSessionState = () => {
         sessionStorage.removeItem(OTP_SESSION_KEYS.IDENTIFIER);
