@@ -3,7 +3,7 @@ import {Link, useLocation, useNavigate} from 'react-router-dom';
 import {API_CONFIG} from '../config';
 import {apiService} from '../services/apiService';
 import {useAuthState} from '../hooks/authStateHook';
-import {AuthLoadingOverlay, AuthSuccessMessage} from '../components/auth/AuthStateComponents';
+import {AuthLoadingOverlay} from '../components/auth/AuthStateComponents';
 import RateLimitInfo from '../components/RateLimitInfo';
 import {useToast} from '../hooks/useToast';
 import ValidationError from '../components/Validation/ValidationError';
@@ -17,6 +17,12 @@ import AuthDivider from '../components/auth/AuthDivider';
 import {validatePassword} from '../utils/validation';
 import {useAuth} from '../context/authUtils';
 import AlertBanner from '../components/AlertBanner.jsx';
+
+const OTP_SESSION_KEYS = {
+    IDENTIFIER: 'otpIdentifier',
+    IDENTIFIER_TYPE: 'otpIdentifierType',
+    FLOW: 'otpFlow',
+};
 
 const SignupPage = () => {
     const location = useLocation();
@@ -33,44 +39,23 @@ const SignupPage = () => {
     const [acceptTerms, setAcceptTerms] = useState(false);
     const [fieldErrors, setFieldErrors] = useState({});
     const [loading, setLoading] = useState(false);
-    const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-    const reason = useMemo(() => {
-        const stateReason = location.state?.reason;
-        const queryReason = new URLSearchParams(location.search).get('reason');
-        return stateReason || queryReason;
-    }, [location.search, location.state]);
+    const reason = location.state?.reason;
 
     const banner = useMemo(() => {
-        if (reason === 'deleted') {
-            return {type: 'error', message: 'User was deleted. Please sign up again to reactivate.'};
-        }
-
-        if (reason === 'inactive') {
-            return {type: 'info', message: 'User not found. Please sign up.'};
+        if (reason === 'USER_NOT_FOUND') {
+            return {type: 'info', message: 'User does not exist. Please sign up.'};
         }
 
         return null;
     }, [reason]);
 
     useEffect(() => {
-        if (!reason) {
-            return;
+        if (reason === 'USER_NOT_FOUND') {
+            toast.info('User does not exist. Please sign up.');
+            window.history.replaceState({}, document.title);
         }
-
-        const params = new URLSearchParams(location.search);
-        params.delete('reason');
-        const nextState = {...(location.state || {})};
-        delete nextState.reason;
-
-        navigate({
-            pathname: location.pathname,
-            search: params.toString() ? `?${params.toString()}` : '',
-        }, {
-            replace: true,
-            state: Object.keys(nextState).length ? nextState : null,
-        });
-    }, [location.pathname, location.search, location.state, navigate, reason]);
+    }, [reason, toast]);
 
     useEffect(() => {
         if (!isLoading && isAuthenticated) {
@@ -179,13 +164,34 @@ const SignupPage = () => {
             return;
         }
 
-        authState.setSuccess('Signup successful. Please login.');
-        setShowSuccessMessage(true);
-        setLoading(false);
+        // Step 2: request OTP for email verification.
+        authState.setLoading('Sending verification code...');
+        const otpEndpoint = identifierType === 'EMAIL' ? API_CONFIG.ENDPOINTS.EMAIL_OTP_REQUEST : API_CONFIG.ENDPOINTS.PHONE_OTP_REQUEST;
+        const otpPayload = identifierType === 'EMAIL' ? {email: identifier, otp_purpose: 'SIGNUP'} : {phone: identifier, otp_purpose: 'SIGNUP'};
+        const otpResult = await apiService.post(otpEndpoint, otpPayload);
 
-        setTimeout(() => {
-            navigate('/login', {replace: true, state: {reason: 'signup_success'}});
-        }, 1500);
+        if (apiService.isErrorResponse(otpResult)) {
+            const errorMsg = otpResult.message || 'Failed to send verification code.';
+            toast.error(errorMsg);
+            authState.setError(errorMsg);
+            setLoading(false);
+            return;
+        }
+
+        setLoading(false);
+        authState.setIdle();
+
+        // Step 3: navigate to OTP page for verification.
+        sessionStorage.setItem(OTP_SESSION_KEYS.IDENTIFIER, identifier);
+        sessionStorage.setItem(OTP_SESSION_KEYS.IDENTIFIER_TYPE, identifierType);
+        sessionStorage.setItem(OTP_SESSION_KEYS.FLOW, 'SIGNUP');
+        navigate('/otp', {
+            state: {
+                identifier,
+                identifierType,
+                flow: 'SIGNUP',
+            },
+        });
     };
 
     if (!identifier) {
@@ -205,14 +211,8 @@ const SignupPage = () => {
                 <AlertBanner type={banner?.type} message={banner?.message}/>
                 <AuthFlowProgress currentStep="signup"/>
 
-                {showSuccessMessage ? (
-                    <AuthSuccessMessage
-                        message={authState.message}
-                        actionLabel="Redirecting to login..."
-                    />
-                ) : (
-                    <form onSubmit={handleGetOtp} noValidate>
-                        <div className="space-y-4">
+                <form onSubmit={handleGetOtp} noValidate>
+                    <div className="space-y-4">
                             {/* Password Input */}
                             <div className="relative">
                                 <AuthInput
@@ -293,13 +293,12 @@ const SignupPage = () => {
                             >
                                 {loading ? 'Sending OTP...' : 'Get OTP'}
                             </AuthButton>
-                        </div>
-                        <RateLimitInfo/>
-                    </form>
-                )}
+                    </div>
+                    <RateLimitInfo/>
+                </form>
 
                 {/* Google button moved below main CTA */}
-                {isEmailIdentifier && !showSuccessMessage && (
+                {isEmailIdentifier && (
                     <div className="mt-6">
                         <AuthDivider label="OR continue with"/>
                         <div className="auth-section">

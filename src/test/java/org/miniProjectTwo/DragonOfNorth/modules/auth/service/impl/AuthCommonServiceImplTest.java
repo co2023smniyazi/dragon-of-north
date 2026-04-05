@@ -13,13 +13,13 @@ import org.miniProjectTwo.DragonOfNorth.modules.otp.service.OtpService;
 import org.miniProjectTwo.DragonOfNorth.modules.session.service.SessionService;
 import org.miniProjectTwo.DragonOfNorth.modules.user.model.AppUser;
 import org.miniProjectTwo.DragonOfNorth.modules.user.repo.AppUserRepository;
-import org.miniProjectTwo.DragonOfNorth.modules.user.service.UserLifecycleOperation;
 import org.miniProjectTwo.DragonOfNorth.modules.user.service.UserStateValidator;
 import org.miniProjectTwo.DragonOfNorth.security.model.AppUserDetails;
 import org.miniProjectTwo.DragonOfNorth.security.service.JwtServices;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.ErrorCode;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.Provider;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.RoleName;
+import org.miniProjectTwo.DragonOfNorth.shared.enums.UserLifecycleOperation;
 import org.miniProjectTwo.DragonOfNorth.shared.exception.BusinessException;
 import org.miniProjectTwo.DragonOfNorth.shared.model.Role;
 import org.miniProjectTwo.DragonOfNorth.shared.repository.RoleRepository;
@@ -182,6 +182,36 @@ class AuthCommonServiceImplTest {
         verify(sessionService, never()).createSession(any(), anyString(), anyString(), anyString(), anyString());
         verify(meterRegistry).counter("auth.login.failure");
         verify(auditEventLogger).log(eq("auth.login"), eq(user.getId()), eq("device-1"), eq("127.0.0.1"), eq("failure"), argThat(msg -> msg != null && msg.toLowerCase().contains("not verified")), eq("req-1"));
+    }
+
+    @Test
+    void login_shouldNormalizeEmailBeforeLookup_whenEmailHasWhitespaceAndUppercase() {
+        AppUser user = new AppUser();
+        user.setId(UUID.randomUUID());
+        user.setEmail("user@example.com");
+        user.setEmailVerified(true);
+        user.setRoles(Set.of());
+
+        Authentication authentication = mock(Authentication.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        Counter successCounter = mock(Counter.class);
+        AuthRequestContext context = new AuthRequestContext("device-1", "127.0.0.1", "req-1", "JUnit");
+
+        when(appUserRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
+        when(userAuthProviderRepository.existsByUserIdAndProvider(user.getId(), Provider.LOCAL)).thenReturn(true);
+        when(authenticationManager.authenticate(any())).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(new AppUserDetails(user));
+        when(jwtServices.generateAccessToken(any(), any())).thenReturn("access");
+        when(jwtServices.generateRefreshToken(any())).thenReturn("refresh");
+        when(meterRegistry.counter(anyString())).thenReturn(successCounter);
+
+        authCommonService.login(" USER@EXAMPLE.COM ", "Secret@123", response, context);
+
+        verify(appUserRepository).findByEmail("user@example.com");
+        verify(authenticationManager).authenticate(argThat(token ->
+                token instanceof UsernamePasswordAuthenticationToken up &&
+                        "user@example.com".equals(up.getPrincipal())
+        ));
     }
 
     @Test

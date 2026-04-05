@@ -7,9 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.miniProjectTwo.DragonOfNorth.modules.otp.model.OtpToken;
 import org.miniProjectTwo.DragonOfNorth.modules.otp.repo.OtpTokenRepository;
-import org.miniProjectTwo.DragonOfNorth.modules.otp.service.impl.EmailOtpSender;
-import org.miniProjectTwo.DragonOfNorth.modules.otp.service.impl.PhoneOtpSender;
-import org.miniProjectTwo.DragonOfNorth.modules.otp.service.impl.OtpServiceImpl;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.ErrorCode;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.IdentifierType;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.OtpPurpose;
@@ -19,6 +16,7 @@ import org.miniProjectTwo.DragonOfNorth.shared.util.AuditEventLogger;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -50,10 +48,13 @@ class OtpServiceTest {
     @Mock
     private AuditEventLogger auditEventLogger;
 
+    @Mock
+    private Environment environment;
+
     @BeforeEach
     void setUp() {
-        when(meterRegistry.counter(anyString())).thenReturn(counter);
-        otpServiceImpl = new OtpServiceImpl(otpTokenRepository, emailOtpSender, phoneOtpSender, meterRegistry, auditEventLogger);
+        lenient().when(meterRegistry.counter(anyString())).thenReturn(counter);
+        otpServiceImpl = new OtpServiceImpl(otpTokenRepository, emailOtpSender, phoneOtpSender, meterRegistry, auditEventLogger, environment);
         ReflectionTestUtils.setField(otpServiceImpl, "otpLength", 6);
         ReflectionTestUtils.setField(otpServiceImpl, "ttlMinutes", 5);
         ReflectionTestUtils.setField(otpServiceImpl, "maxAttempts", 3);
@@ -81,6 +82,7 @@ class OtpServiceTest {
         otpServiceImpl.createPhoneOtp(phone, purpose);
 
         // verify
+        verify(otpTokenRepository).invalidateActiveTokens(eq(phone), eq(IdentifierType.PHONE), eq(purpose));
         verify(otpTokenRepository).save(any(OtpToken.class));
         verify(phoneOtpSender, atLeastOnce()).send(anyString(), anyString(), anyInt());
     }
@@ -233,7 +235,24 @@ class OtpServiceTest {
                 .thenReturn(5); // maxRequestsPerWindow is 5 in setUp
 
         // act & assert
-        assertThrows(IllegalStateException.class, () -> otpServiceImpl.createEmailOtp(email, purpose));
+        BusinessException exception = assertThrows(BusinessException.class, () -> otpServiceImpl.createEmailOtp(email, purpose));
+        assertEquals(ErrorCode.OTP_TOO_MANY_REQUESTS, exception.getErrorCode());
+    }
+
+    @Test
+    void fetchLatest_shouldThrowBusinessExceptionOtpNotFound_whenTokenMissing() {
+        // arrange
+        when(otpTokenRepository.findTopByIdentifierAndTypeAndOtpPurposeOrderByCreatedAtDesc("missing@example.com", IdentifierType.EMAIL, OtpPurpose.SIGNUP))
+                .thenReturn(Optional.empty());
+
+        // act
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> otpServiceImpl.fetchLatest("missing@example.com", IdentifierType.EMAIL, OtpPurpose.SIGNUP)
+        );
+
+        // assert
+        assertEquals(ErrorCode.OTP_NOT_FOUND, exception.getErrorCode());
     }
 
     @Test

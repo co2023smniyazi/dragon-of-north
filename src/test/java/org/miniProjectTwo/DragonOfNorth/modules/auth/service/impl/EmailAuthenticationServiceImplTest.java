@@ -14,10 +14,10 @@ import org.miniProjectTwo.DragonOfNorth.modules.otp.service.OtpService;
 import org.miniProjectTwo.DragonOfNorth.modules.profile.service.ProfileService;
 import org.miniProjectTwo.DragonOfNorth.modules.user.model.AppUser;
 import org.miniProjectTwo.DragonOfNorth.modules.user.repo.AppUserRepository;
-import org.miniProjectTwo.DragonOfNorth.modules.user.service.UserLifecycleOperation;
 import org.miniProjectTwo.DragonOfNorth.modules.user.service.UserStateValidator;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.IdentifierType;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.OtpPurpose;
+import org.miniProjectTwo.DragonOfNorth.shared.enums.UserLifecycleOperation;
 import org.miniProjectTwo.DragonOfNorth.shared.exception.BusinessException;
 import org.miniProjectTwo.DragonOfNorth.shared.util.AuditEventLogger;
 import org.mockito.ArgumentCaptor;
@@ -33,6 +33,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.miniProjectTwo.DragonOfNorth.shared.enums.AppUserStatus.ACTIVE;
+import static org.miniProjectTwo.DragonOfNorth.shared.enums.AppUserStatus.PENDING_VERIFICATION;
+import static org.miniProjectTwo.DragonOfNorth.shared.enums.ErrorCode.OTP_VERIFICATION_REQUIRED;
 import static org.miniProjectTwo.DragonOfNorth.shared.enums.IdentifierType.EMAIL;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -128,7 +130,7 @@ class EmailAuthenticationServiceImplTest {
 
 
     @Test
-    void signUpUser_shouldSaveUserWithEncodedPassword_AndSetUserStatusAsACTIVE_whenCalled() {
+    void signUpUser_shouldSaveUserWithEncodedPassword_AndSetUserStatusAsPENDING_VERIFICATION_whenCalled() {
 
         when(meterRegistry.counter(anyString())).thenReturn(counter);
 
@@ -139,12 +141,13 @@ class EmailAuthenticationServiceImplTest {
         AppUser appUser = new AppUser();
         appUser.setEmail(request.identifier());
         appUser.setPassword(request.password());
-        appUser.setAppUserStatus(ACTIVE);
+        appUser.setAppUserStatus(PENDING_VERIFICATION);
         appUser.setId(java.util.UUID.randomUUID());
 
         when(passwordEncoder.encode(request.password())).thenReturn("encodedPassword");
         when(appUserRepository.save(any(AppUser.class))).thenReturn(appUser);
-        when(appUserRepository.findByEmail(request.identifier())).thenReturn(Optional.of(appUser));
+        when(appUserRepository.findByEmail("test@mockito.com")).thenReturn(Optional.of(appUser));
+        when(appUserRepository.findByEmailForUpdate("test@mockito.com")).thenReturn(Optional.empty());
         when(userAuthProviderRepository.findAllByUserId(appUser.getId())).thenReturn(List.of());
 
         //act
@@ -152,10 +155,11 @@ class EmailAuthenticationServiceImplTest {
 
         //assert
         assertNotNull(response, "method response should not be null");
-        assertEquals(ACTIVE, response.appUserStatus(), "method should return status ACTIVE");
+        assertEquals(PENDING_VERIFICATION, response.appUserStatus(), "method should return status PENDING_VERIFICATION");
 
         //verify
         verify(passwordEncoder).encode(request.password());
+        verify(appUserRepository).findByEmailForUpdate("test@mockito.com");
 
         ArgumentCaptor<AppUser> argumentCaptor = ArgumentCaptor.forClass(AppUser.class);
 
@@ -165,7 +169,7 @@ class EmailAuthenticationServiceImplTest {
 
         assertEquals("encodedPassword", capturedUser.getPassword(), "password must be encoded before saving to the database");
         assertEquals(request.identifier(), capturedUser.getEmail(), "saved email and received email should be same");
-        assertEquals(ACTIVE, capturedUser.getAppUserStatus(), "user status should be ACTIVE once the user is saved");
+        assertEquals(PENDING_VERIFICATION, capturedUser.getAppUserStatus(), "user status should be PENDING_VERIFICATION once the user is saved");
 
         verify(userAuthProviderRepository).save(any(UserAuthProvider.class));
         verify(profileService, never()).ensureProfileExists(any(UUID.class), any());
@@ -193,6 +197,7 @@ class EmailAuthenticationServiceImplTest {
                 .verifiedAt(Instant.now())
                 .build();
         when(otpService.fetchLatest(email, EMAIL, OtpPurpose.SIGNUP)).thenReturn(otpToken);
+        when(otpService.fetchLatest(email, EMAIL, OtpPurpose.LOGIN_UNVERIFIED)).thenThrow(new BusinessException(org.miniProjectTwo.DragonOfNorth.shared.enums.ErrorCode.OTP_NOT_FOUND));
 
         //act
         AppUserStatusFinderResponse response = emailAuthenticationService.completeSignUp(email);
@@ -208,6 +213,29 @@ class EmailAuthenticationServiceImplTest {
         verify(profileService).ensureProfileExists(appUser.getId(), null);
         verify(auditEventLogger).log("auth.signup.complete", appUser.getId(), null, null, "success", "identifier_type=EMAIL", null);
 
+    }
+
+    @Test
+    void completeSignUp_shouldRejectWhenSignupOtpNotVerifiedEvenIfConsumed_whenVerifiedAtMissing() {
+        when(meterRegistry.counter(anyString())).thenReturn(counter);
+        AppUser appUser = new AppUser();
+        appUser.setId(UUID.randomUUID());
+        appUser.setEmail(email);
+        appUser.setAppUserStatus(PENDING_VERIFICATION);
+
+        OtpToken otpToken = OtpToken.builder()
+                .consumed(true)
+                .expiresAt(Instant.now().plusSeconds(60))
+                .verifiedAt(null)
+                .build();
+
+        when(appUserRepository.findByEmail(email)).thenReturn(Optional.of(appUser));
+        when(otpService.fetchLatest(email, EMAIL, OtpPurpose.SIGNUP)).thenReturn(otpToken);
+        when(otpService.fetchLatest(email, EMAIL, OtpPurpose.LOGIN_UNVERIFIED)).thenThrow(new BusinessException(org.miniProjectTwo.DragonOfNorth.shared.enums.ErrorCode.OTP_NOT_FOUND));
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> emailAuthenticationService.completeSignUp(email));
+        assertEquals(OTP_VERIFICATION_REQUIRED, ex.getErrorCode());
+        verify(appUserRepository, never()).save(any());
     }
 
     @Test

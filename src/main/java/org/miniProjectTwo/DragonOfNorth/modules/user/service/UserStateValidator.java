@@ -3,6 +3,7 @@ package org.miniProjectTwo.DragonOfNorth.modules.user.service;
 import org.miniProjectTwo.DragonOfNorth.modules.user.model.AppUser;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.AppUserStatus;
 import org.miniProjectTwo.DragonOfNorth.shared.enums.ErrorCode;
+import org.miniProjectTwo.DragonOfNorth.shared.enums.UserLifecycleOperation;
 import org.miniProjectTwo.DragonOfNorth.shared.exception.BusinessException;
 import org.springframework.stereotype.Component;
 
@@ -17,8 +18,18 @@ public class UserStateValidator {
             throw new BusinessException(ErrorCode.USER_OPERATION_NOT_ALLOWED, operation.name(), "UNKNOWN");
         }
 
-        if (status == ACTIVE && isActiveAllowed(operation)) {
-            return;
+        if (status == ACTIVE) {
+            if (isActiveAllowed(operation)) {
+                return;
+            }
+            throw new BusinessException(ErrorCode.USER_ALREADY_ACTIVE);
+        }
+
+        if (status == PENDING_VERIFICATION) {
+            if (operation == UserLifecycleOperation.LOCAL_SIGNUP_COMPLETE) {
+                return;
+            }
+            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED, "Email not verified");
         }
 
         if (status == LOCKED) {
