@@ -212,7 +212,7 @@ public class PhoneAuthenticationServiceImpl implements AuthenticationService {
             throw new BusinessException(ErrorCode.OTP_VERIFICATION_REQUIRED);
         }
 
-        if (otpToken == null || otpToken.isExpired() || otpToken.getVerifiedAt() == null) {
+        if (otpToken.isExpired() || otpToken.getVerifiedAt() == null) {
             throw new BusinessException(ErrorCode.OTP_VERIFICATION_REQUIRED);
         }
     }

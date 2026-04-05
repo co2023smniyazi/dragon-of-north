@@ -226,12 +226,11 @@ public class EmailAuthenticationServiceImpl implements AuthenticationService {
     }
 
     private void ensureSignupOtpVerified(String identifier) {
-        String normalizedIdentifier = identifier;
         OtpToken latestVerified = null;
 
         for (OtpPurpose purpose : List.of(OtpPurpose.SIGNUP, OtpPurpose.LOGIN_UNVERIFIED)) {
             try {
-                OtpToken candidate = otpService.fetchLatest(normalizedIdentifier, EMAIL, purpose);
+                OtpToken candidate = otpService.fetchLatest(identifier, EMAIL, purpose);
                 if (candidate != null && !candidate.isExpired() && candidate.getVerifiedAt() != null) {
                     if (latestVerified == null || candidate.getVerifiedAt().isAfter(latestVerified.getVerifiedAt())) {
                         latestVerified = candidate;
