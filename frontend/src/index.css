@@ -112,19 +112,20 @@
     --toast-close-hover: rgba(0, 0, 0, 0.1);
     --toast-icon: #111827;
 
-    /* ── PROFILE REDESIGN COLORS ──────────────────── */
-    --bg-base: #0D0F14;
-    --bg-surface: #111318;
-    --bg-elevated: #161920;
-    --accent: #00FFC2;
-    --accent-dim: rgba(0, 255, 194, 0.08);
-    --accent-border: rgba(0, 255, 194, 0.20);
-    --accent-glow: rgba(0, 255, 194, 0.15);
-    --text-primary: #E8EAF0;
-    --text-secondary: #6B7280;
-    --text-mono: #A0A8B8;
-    --border-default: rgba(255, 255, 255, 0.06);
-    --border-hover: rgba(255, 255, 255, 0.12);
+    /* ── PROFILE / DASHBOARD TOKENS (theme-aware) ───────────── */
+    /* Light defaults */
+    --bg-base: hsl(var(--background));
+    --bg-surface: hsl(var(--card));
+    --bg-elevated: color-mix(in srgb, hsl(var(--card)) 92%, hsl(var(--foreground)) 3%);
+    --accent: hsl(var(--primary));
+    --accent-dim: hsl(var(--primary) / 0.12);
+    --accent-border: hsl(var(--primary) / 0.30);
+    --accent-glow: hsl(var(--primary) / 0.20);
+    --text-primary: hsl(var(--foreground));
+    --text-secondary: hsl(var(--muted-foreground));
+    --text-mono: hsl(var(--muted-foreground));
+    --border-default: hsl(var(--border) / 0.7);
+    --border-hover: hsl(var(--border));
 }
 
 :root[data-theme="dark"],
@@ -176,6 +177,20 @@ body[data-theme="dark"],
     --toast-close-bg: rgba(255, 255, 255, 0.08);
     --toast-close-hover: rgba(255, 255, 255, 0.15);
     --toast-icon: #e5e7eb;
+
+    /* Profile / dashboard tokens (dark overrides) */
+    --bg-base: hsl(var(--background));
+    --bg-surface: hsl(var(--card));
+    --bg-elevated: color-mix(in srgb, hsl(var(--card)) 86%, hsl(var(--foreground)) 6%);
+    --accent: hsl(var(--primary));
+    --accent-dim: hsl(var(--primary) / 0.14);
+    --accent-border: hsl(var(--primary) / 0.32);
+    --accent-glow: hsl(var(--primary) / 0.24);
+    --text-primary: hsl(var(--foreground));
+    --text-secondary: hsl(var(--muted-foreground));
+    --text-mono: hsl(var(--muted-foreground));
+    --border-default: hsl(var(--border) / 0.6);
+    --border-hover: hsl(var(--border) / 0.85);
 }
 
 :root[data-theme="light"],
@@ -800,7 +815,7 @@ a:hover {
     /* ── NAVBAR ─────────────────────────────────– */
     .navbar {
         @apply fixed top-0 left-0 right-0 h-[60px] z-[100] flex items-center justify-between px-8;
-        background: rgba(13, 13, 18, 0.92);
+        background: color-mix(in srgb, var(--don-bg-base) 92%, transparent);
         border-bottom: 1px solid var(--don-border-subtle);
         backdrop-filter: blur(12px);
     }
@@ -813,7 +828,7 @@ a:hover {
 
     .navbar.shrunk {
         @apply h-[50px];
-        background: rgba(13, 13, 18, 0.95);
+        background: color-mix(in srgb, var(--don-bg-base) 95%, transparent);
     }
 
     .navbar-brand {
@@ -2438,8 +2453,8 @@ a:hover {
         bottom: 0;
         width: min(280px, 88vw);
         padding: var(--s4) var(--s3);
-        background: #0A0C10;
-        border-right: 0.5px solid rgba(255, 255, 255, 0.06);
+        background: var(--bg-base);
+        border-right: 0.5px solid var(--border-default);
         z-index: 60;
         overflow-y: auto;
         overflow-x: hidden;
@@ -2456,7 +2471,7 @@ a:hover {
         inset: 0;
         border: none;
         padding: 0;
-        background: rgba(2, 6, 23, 0.55);
+        background: color-mix(in srgb, var(--don-bg-base) 55%, transparent);
         opacity: 0;
         pointer-events: none;
         transition: opacity 220ms ease;
@@ -2550,12 +2565,12 @@ a:hover {
     .dashboard-nav-item:hover {
         background: var(--bg-elevated);
         color: var(--text-primary);
-        border-color: rgba(0, 255, 194, 0.20);
+        border-color: var(--accent-border);
     }
 
     .dashboard-nav-item--active {
-        background: rgba(0, 255, 194, 0.08);
-        border-color: rgba(0, 255, 194, 0.20);
+        background: var(--accent-dim);
+        border-color: var(--accent-border);
         color: var(--accent);
     }
 
@@ -2706,8 +2721,8 @@ a:hover {
         --topbar-translate-y: 0%;
         --topbar-scale-y: 1;
         padding: var(--topbar-padding-expanded) var(--topbar-padding-inline);
-        border-bottom: 0.5px solid rgba(255, 255, 255, 0.06);
-        background: #0D0F14;
+        border-bottom: 0.5px solid var(--border-default);
+        background: var(--bg-base);
         backdrop-filter: none;
         transform: translateY(var(--topbar-translate-y)) scaleY(var(--topbar-scale-y));
         will-change: transform, padding, backdrop-filter, box-shadow;
@@ -2745,12 +2760,12 @@ a:hover {
     }
 
     .dark .dashboard-topbar {
-        background: #0D0F14;
-        border-bottom-color: rgba(255, 255, 255, 0.06);
+        background: var(--bg-base);
+        border-bottom-color: var(--border-default);
     }
 
     .dark .header.shrunk {
-        background: #0D0F14;
+        background: var(--bg-base);
     }
 
     .dark .header.shrunk {
@@ -2768,7 +2783,7 @@ a:hover {
         width: 36px;
         height: 36px;
         border-radius: 6px;
-        border: 0.5px solid rgba(255, 255, 255, 0.06);
+        border: 0.5px solid var(--border-default);
         background: transparent;
         color: var(--text-secondary);
         display: inline-flex;
@@ -2787,7 +2802,7 @@ a:hover {
     }
 
     .dark .dashboard-mobile-menu-btn {
-        border-color: rgba(255, 255, 255, 0.06);
+        border-color: var(--border-default);
         background: transparent;
     }
 
