@@ -257,6 +257,15 @@ public class ProfileServiceImpl implements ProfileService {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "File size exceeds limit of 2MB");
         }
 
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null) {
+            String normalizedFilename = originalFilename.trim();
+            if (normalizedFilename.contains("\\") || normalizedFilename.contains("/")
+                    || normalizedFilename.contains("\"") || normalizedFilename.contains("..")) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT, "Invalid file format: unsupported filename");
+            }
+        }
+
         String contentType = file.getContentType();
         String normalizedContentType = contentType == null ? "" : contentType.trim().toLowerCase().split(";")[0];
         if (normalizedContentType == null || !ALLOWED_IMAGE_TYPES.contains(normalizedContentType)) {
@@ -273,6 +282,13 @@ public class ProfileServiceImpl implements ProfileService {
             ));
         } catch (IOException exception) {
             throw new BusinessException(ErrorCode.INVALID_INPUT, "Failed to upload image: " + exception.getMessage());
+        } catch (RuntimeException exception) {
+            String detail = exception.getMessage() == null ? "" : exception.getMessage().toLowerCase();
+            if (detail.contains("invalid image")) {
+                throw new BusinessException(ErrorCode.INVALID_INPUT,
+                        "Invalid image format. Allowed formats: image/jpeg, image/png, image/webp");
+            }
+            throw new BusinessException(ErrorCode.INVALID_INPUT, "Invalid image upload payload");
         }
     }
 

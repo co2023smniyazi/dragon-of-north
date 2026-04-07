@@ -23,6 +23,10 @@ spring:
       password: ${redis_password}
       repositories:
         enabled: false
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
   flyway:
     enabled: true
     baseline-on-migrate: true

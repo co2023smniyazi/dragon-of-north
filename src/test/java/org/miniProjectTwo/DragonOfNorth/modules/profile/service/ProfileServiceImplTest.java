@@ -321,6 +321,50 @@ class ProfileServiceImplTest {
     }
 
     @Test
+    void updateProfileImage_shouldRejectSuspiciousFilename() {
+        UUID userId = UUID.randomUUID();
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "bad\"name.png",
+                "image/png",
+                "content".getBytes()
+        );
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> profileService.updateProfileImage(userId, file));
+
+        assertEquals(ErrorCode.INVALID_INPUT, exception.getErrorCode());
+        assertEquals("Invalid file format: unsupported filename", exception.getMessage());
+        verifyNoInteractions(appUserRepository);
+    }
+
+    @Test
+    void updateProfileImage_shouldReturnSpecificError_whenCloudinaryRejectsImageFormat() throws Exception {
+        UUID userId = UUID.randomUUID();
+        AppUser appUser = new AppUser();
+        appUser.setId(userId);
+
+        Profile profile = new Profile();
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "avatar.png",
+                "image/png",
+                "content".getBytes()
+        );
+
+        when(appUserRepository.findById(userId)).thenReturn(Optional.of(appUser));
+        when(profileRepository.findByAppUserId(userId)).thenReturn(Optional.of(profile));
+        when(cloudinary.uploader()).thenReturn(uploader);
+        when(uploader.upload(any(byte[].class), anyMap())).thenThrow(new RuntimeException("Invalid image file"));
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> profileService.updateProfileImage(userId, file));
+
+        assertEquals(ErrorCode.INVALID_INPUT, exception.getErrorCode());
+        assertEquals("Invalid image format. Allowed formats: image/jpeg, image/png, image/webp", exception.getMessage());
+    }
+
+    @Test
     void deleteProfileImage_shouldRemoveStoredImageAndResetAvatar() throws Exception {
         UUID userId = UUID.randomUUID();
         Profile profile = new Profile();
