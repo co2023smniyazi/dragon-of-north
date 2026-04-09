@@ -17,22 +17,7 @@ const GoogleLoginButton = ({onSuccess, onError, onStart, disabled = false, autoP
         expectedIdentifierRef.current = expectedIdentifier;
     }, [expectedIdentifier]);
 
-    useEffect(() => {
-        const buttonNode = buttonRef.current;
-        if (!buttonNode || !onStart) return;
-
-        const handleClick = () => {
-            if (!disabled) {
-                onStart();
-            }
-        };
-
-        buttonNode.addEventListener('click', handleClick);
-
-        return () => {
-            buttonNode.removeEventListener('click', handleClick);
-        };
-    }, [disabled, onStart]);
+    // Custom single-button UI: invoke onStart on click (no nested iframe button)
 
     const decodeJWT = (token) => {
         try {
@@ -103,25 +88,13 @@ const GoogleLoginButton = ({onSuccess, onError, onStart, disabled = false, autoP
         }
 
         const initializeGoogle = () => {
-            if (initializedRef.current || !window.google?.accounts?.id || !buttonRef.current) {
+            if (initializedRef.current || !window.google?.accounts?.id) {
                 return;
             }
 
             window.google.accounts.id.initialize({
                 client_id: clientId,
                 callback: handleGoogleCredential,
-            });
-
-            buttonRef.current.innerHTML = '';
-            const measuredWidth = buttonRef.current.clientWidth || 320;
-            const buttonWidth = Math.max(1, Math.floor(measuredWidth));
-            window.google.accounts.id.renderButton(buttonRef.current, {
-                type: 'standard',
-                theme: 'outline',
-                text: 'continue_with',
-                shape: 'pill',
-                size: 'large',
-                width: buttonWidth,
             });
 
             initializedRef.current = true;
@@ -159,6 +132,13 @@ const GoogleLoginButton = ({onSuccess, onError, onStart, disabled = false, autoP
         };
     }, [handleGoogleCredential, onError]);
 
+    const handleButtonClick = () => {
+        if (disabled || isRedirecting || !window.google?.accounts?.id) return;
+        onStart?.();
+        // Trigger the Google Identity prompt. This keeps the UI as ONE clean button.
+        window.google.accounts.id.prompt();
+    };
+
     useEffect(() => {
         if (!autoPrompt || !isReady || !window.google?.accounts?.id) return;
         window.google.accounts.id.prompt();
@@ -170,9 +150,30 @@ const GoogleLoginButton = ({onSuccess, onError, onStart, disabled = false, autoP
 
     return (
         <div className="auth-oauth-wrap" aria-busy={isInitializing}>
-            <div className={`auth-oauth-button-shell ${disabled ? 'pointer-events-none opacity-60' : ''}`.trim()}>
-                <div ref={buttonRef} className="auth-oauth-button-target"/>
-            </div>
+            <button
+                ref={buttonRef}
+                type="button"
+                onClick={handleButtonClick}
+                disabled={disabled || isRedirecting || !hasClientId}
+                className={`auth-google-btn mt-4 ${disabled || isRedirecting ? 'opacity-60 cursor-not-allowed' : ''}`.trim()}
+            >
+                <svg
+                    className="auth-google-icon"
+                    viewBox="0 0 48 48"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.73 1.22 9.25 3.62l6.88-6.88C35.92 2.46 30.44 0 24 0 14.62 0 6.51 5.38 2.56 13.22l8.02 6.23C12.47 13.3 17.77 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.64-.15-3.22-.42-4.75H24v9h12.96c-.56 2.98-2.24 5.5-4.76 7.2l7.28 5.66c4.26-3.93 6.7-9.72 6.7-16.11z"/>
+                    <path fill="#FBBC05" d="M10.58 28.22c-.48-1.45-.76-2.99-.76-4.57s.27-3.12.76-4.57l-8.02-6.23C.92 16.46 0 20.12 0 23.65s.92 7.19 2.56 10.22l8.02-5.65z"/>
+                    <path fill="#34A853" d="M24 47.3c6.44 0 11.84-2.13 15.78-5.78l-7.28-5.66c-2.02 1.36-4.6 2.16-8.5 2.16-6.23 0-11.53-3.8-13.42-9.2l-8.02 5.65C6.51 42.02 14.62 47.3 24 47.3z"/>
+                    <path fill="none" d="M0 0h48v48H0z"/>
+                </svg>
+                <span className="auth-google-text">
+                    Continue with Google
+                </span>
+            </button>
             {isInitializing && <p className="auth-oauth-caption">Loading Google sign-in...</p>}
             {isRedirecting && <p className="auth-oauth-caption font-medium">Redirecting to Google...</p>}
         </div>
