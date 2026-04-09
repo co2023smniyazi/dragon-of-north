@@ -11,14 +11,23 @@ import React, {useState} from 'react';
 const PasswordInput = ({
                            value,
                            onChange,
-                           placeholder = 'Enter your password',
-                           hasError = false,
-                           disabled = false,
-                           required = false,
-                           className = '',
-                           ...props
-                       }) => {
+                           onInput,
+                           onPaste,
+                            placeholder = 'Enter your password',
+                            hasError = false,
+                            disabled = false,
+                            required = false,
+                            className = '',
+                            ...props
+                        }) => {
     const [showPassword, setShowPassword] = useState(false);
+    const handleValueChange = (event) => {
+        onChange?.(event);
+    };
+
+    const handleValueInput = (event) => {
+        onInput?.(event);
+    };
 
     return (
         <div className="password-input-wrapper">
@@ -26,7 +35,9 @@ const PasswordInput = ({
                 {...props}
                 type={showPassword ? 'text' : 'password'}
                 value={value}
-                onChange={onChange}
+                onChange={handleValueChange}
+                onInput={handleValueInput}
+                onPaste={onPaste}
                 placeholder={placeholder}
                 disabled={disabled}
                 required={required}
@@ -47,5 +58,3 @@ const PasswordInput = ({
 };
 
 export default PasswordInput;
-
-

@@ -198,7 +198,7 @@ const AuthPage = () => {
 
     const handleLocalLogin = async (event) => {
         event.preventDefault();
-        if (!password || isGoogleRedirecting) return;
+        if (!password || isGoogleRedirecting || authState.isLoading) return;
 
         if (!normalizedEmail) {
             toast.error('Email is required');
@@ -251,6 +251,16 @@ const AuthPage = () => {
         login({identifier: normalizedEmail});
         navigateAfterAuthSuccess('/');
     };
+
+    const handlePasswordValueChange = useCallback((event) => {
+        const nextPassword = event.target.value;
+        setPassword(nextPassword);
+        if (passwordError) {
+            setPasswordError('');
+        }
+    }, [passwordError]);
+
+    const isPasswordSubmitDisabled = loading || authState.isLoading || isGoogleRedirecting || !password;
 
     //  CLEAN GOOGLE SUCCESS HANDLER
     const handleGoogleSuccess = (data) => {
@@ -389,15 +399,18 @@ const AuthPage = () => {
                         <label className="auth-label block">Password</label>
                         <PasswordInput
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={handlePasswordValueChange}
+                            onInput={handlePasswordValueChange}
                             placeholder="Enter your password"
                             hasError={Boolean(passwordError)}
                             required
+                            autoComplete="current-password"
                             disabled={loading || isGoogleRedirecting || authState.isLoading}
                         />
                         <ValidationError errors={passwordError ? [passwordError] : []}/>
                         <AuthButton
-                            disabled={loading || !password || isGoogleRedirecting}
+                            type="submit"
+                            disabled={isPasswordSubmitDisabled}
                             loading={loading}
                         >
                             Login with password
